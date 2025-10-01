@@ -19,8 +19,8 @@ return new class extends Migration
             $table->date('tanggal_kegiatan');
             $table->string('tools');
             $table->foreignId('teknisi')->constrained('users')->onDelete('cascade');
-            $table->date('mulai');
-            $table->date('selesai');
+            $table->datetime('mulai');
+            $table->datetime('selesai');
             $table->timestamps();
         });
     }
