@@ -13,6 +13,7 @@ return new class extends Migration
 	{
 		Schema::table('users', function (Blueprint $table) {
 			$table->string('gelar')->nullable();
+			$table->string('username')->unique()->nullable();
 			$table->string('fullname')->nullable();
 			$table->enum('access_level', ['0','1','2'])->default('0');
 			$table->string('profile_picture')->default('default.png');
@@ -35,10 +36,16 @@ return new class extends Migration
     public function down()
 	{
 		Schema::table('users', function (Blueprint $table) {
-			$table->dropColumn([
+			$columnsToDropIfExist = [
 				'gelar','username','access_level','profile_picture','position','technician',
-				'signature','country','phone_number','address','city','state','zip_code','joined'
-			]);
+				'signature','country','phone_number','address','city','state','zip_code','joined','fullname'
+			];
+			
+			foreach ($columnsToDropIfExist as $column) {
+				if (Schema::hasColumn('users', $column)) {
+					$table->dropColumn($column);
+				}
+			}
 		});
 	}
 };
