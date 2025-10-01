@@ -38,7 +38,7 @@
               <h6 class="small mb-1">{{ $row->title }}</h6>
               <small class="mb-1 d-block text-body">{{ $row->body }}</small>
               {{-- Laravel lebih gampang pakai diffForHumans() --}}
-              <small class="text-muted">{{ $row->date->diffForHumans() }}</small>
+              <small class="text-muted">{{ $row->created_at ? $row->created_at->diffForHumans() : 'Unknown time' }}</small>
             </div>
 
             @if(optional($row->pivot)->status == 0)
