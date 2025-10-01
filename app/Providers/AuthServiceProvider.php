@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\Logbook;
+use App\Policies\LogbookPolicy;
 // use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
