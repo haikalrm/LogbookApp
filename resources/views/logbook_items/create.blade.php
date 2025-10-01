@@ -1,20 +1,104 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container py-4">
-    <h2>Tambah Item Logbook - {{ $logbook->tanggal }} ({{ ucfirst($logbook->shift) }})</h2>
+<div class="content-wrapper">
+    <div class="container-xxl flex-grow-0 container-p-y">
+        <h4 class="py-3 mb-4">
+            <span class="text-muted fw-light">Logbook /</span> Add Content
+        </h4>
 
-    <form method="POST" action="{{ route('logbook.item.store', $logbook->id) }}">
-        @csrf
-        <div class="mb-3">
-            <label>Judul</label>
-            <input type="text" name="judul" class="form-control" required>
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Tambah Item Logbook</h5>
+                <small class="text-muted">Logbook: {{ $logbook->judul }} | {{ \Carbon\Carbon::parse($logbook->date)->format('d F Y') }}</small>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ route('logbook.item.store', ['unit_id' => $unit_id, 'logbook_id' => $logbook->id]) }}">
+                    @csrf
+                    
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="judul" class="form-label">Judul Kegiatan <span class="text-danger">*</span></label>
+                            <input type="text" name="judul" id="judul" class="form-control" placeholder="Masukkan judul kegiatan..." value="{{ old('judul') }}" required>
+                            @error('judul')
+                                <div class="text-danger">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="catatan" class="form-label">Catatan Kegiatan <span class="text-danger">*</span></label>
+                            <textarea name="catatan" id="catatan" class="form-control" rows="4" placeholder="Masukkan detail kegiatan..." required>{{ old('catatan') }}</textarea>
+                            @error('catatan')
+                                <div class="text-danger">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="tanggal_kegiatan" class="form-label">Tanggal Kegiatan <span class="text-danger">*</span></label>
+                            <input type="date" name="tanggal_kegiatan" id="tanggal_kegiatan" class="form-control" value="{{ old('tanggal_kegiatan', $logbook->date) }}" required>
+                            @error('tanggal_kegiatan')
+                                <div class="text-danger">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-6 mb-3">
+                           <label for="alat" class="form-label">Tools <span class="text-danger">Alat</span</label>
+                            <select name="alat" id="alat" class="form-select" required>
+                                <option value="">Pilih Alat</option>
+                                @foreach(\App\Models\Tool::where('name', $unit_id)->get() as $tool)
+                                    <option value="{{ $tool->id }}" {{ old('alat') == $tool->id ? 'selected' : '' }}>
+                                        {{ $tool->nama }} ({{ $tool->kode }})
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="teknisi" class="form-label">Teknisi <span class="text-danger">*</span></label>
+                            <select name="teknisi" id="teknisi" class="form-select" required>
+                                <option value="">Pilih Teknisi</option>
+                                @foreach(\App\Models\User::where('technician', 1)->get() as $user)
+                                    <option value="{{ $user->id }}" {{ old('teknisi') == $user->id ? 'selected' : '' }}>
+                                        {{ $user->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('teknisi')
+                                <div class="text-danger">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="mulai" class="form-label">Waktu Mulai <span class="text-danger">*</span></label>
+                            <input type="datetime-local" name="mulai" id="mulai" class="form-control" value="{{ old('mulai') }}" required>
+                            @error('mulai')
+                                <div class="text-danger">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="selesai" class="form-label">Waktu Selesai <span class="text-danger">*</span></label>
+                            <input type="datetime-local" name="selesai" id="selesai" class="form-control" value="{{ old('selesai') }}" required>
+                            @error('selesai')
+                                <div class="text-danger">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ri-save-line me-1"></i>Simpan Item
+                        </button>
+                        <a href="{{ route('logbook.view', ['unit_id' => $unit_id, 'logbook_id' => $logbook->id]) }}" class="btn btn-secondary">
+                            <i class="ri-arrow-left-line me-1"></i>Kembali
+                        </a>
+                    </div>
+                </form>
+            </div>
         </div>
-        <div class="mb-3">
-            <label>Isi</label>
-            <textarea name="isi" class="form-control" required></textarea>
-        </div>
-        <button type="submit" class="btn btn-success">Tambah</button>
-    </form>
+    </div>
 </div>
 @endsection

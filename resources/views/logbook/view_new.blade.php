@@ -302,26 +302,11 @@
                     @forelse($logbookItems as $index => $item)
                     <tr>
                         <td class="no-col">{{ $index + 1 }}</td>
-                        <td>{{ $item->judul ?? '-' }}</td>
-                        <td>{{ $item->mulai ? \Carbon\Carbon::parse($item->mulai)->format('d/m/Y H:i') : '-' }}</td>
-                        <td>{{ $item->selesai ? \Carbon\Carbon::parse($item->selesai)->format('d/m/Y H:i') : '-' }}</td>
-                        <td>
-                            @if($item->mulai && $item->selesai)
-                                @php
-                                    $mulai = \Carbon\Carbon::parse($item->mulai);
-                                    $selesai = \Carbon\Carbon::parse($item->selesai);
-                                    $diff = $mulai->diff($selesai);
-                                    $durasi = '';
-                                    if($diff->d > 0) $durasi .= $diff->d . ' hari ';
-                                    if($diff->h > 0) $durasi .= $diff->h . ' jam ';
-                                    if($diff->i > 0) $durasi .= $diff->i . ' menit';
-                                    echo trim($durasi) ?: '0 menit';
-                                @endphp
-                            @else
-                                -
-                            @endif
-                        </td>
-                        <td>{{ $item->teknisi_user->name ?? 'Unknown' }}</td>
+                        <td>{{ $item->kegiatan ?? '-' }}</td>
+                        <td>{{ $item->mulai ? \Carbon\Carbon::parse($item->mulai)->format('H:i') : '-' }}</td>
+                        <td>{{ $item->selesai ? \Carbon\Carbon::parse($item->selesai)->format('H:i') : '-' }}</td>
+                        <td>{{ $durations[$index] ?? '-' }}</td>
+                        <td>{{ $teknisi[$index] ?? '-' }}</td>
                         <td>{{ $item->catatan ?? '-' }}</td>
                     </tr>
                     @empty

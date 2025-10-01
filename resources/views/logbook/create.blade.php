@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="container">
-    <h1>Create Logbook for Unit {{ strtoupper($unit->name) }}</h1>
+    <h1>Create Logbook for Unit {{ strtoupper($unit->nama) }}</h1>
 
     <form action="{{ route('logbook.store', $unit->id) }}" method="POST">
         @csrf
@@ -12,11 +12,11 @@
         </div>
 
         <div class="form-group">
-            <label for="shift">Shift</label>
-            <select name="shift" id="shift" class="form-control" required>
-                <option value="0">Pagi</option>
-                <option value="1">Siang</option>
-                <option value="2">Malam</option>
+            <label for="radio_shift">Shift</label>
+            <select name="radio_shift" id="radio_shift" class="form-control" required>
+                <option value="1">Pagi</option>
+                <option value="2">Siang</option>
+                <option value="3">Malam</option>
             </select>
         </div>
 

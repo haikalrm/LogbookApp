@@ -35,7 +35,7 @@
                                                             <span class="custom-option-title mb-2">Pagi</span>
                                                             <small>Saya bekerja saat pagi hari</small>
                                                         </span>
-                                                        <input name="radio_shift" class="form-check-input" type="radio" value="0" id="radio_pagi" checked>
+                                                        <input name="radio_shift" class="form-check-input" type="radio" value="1" id="radio_pagi" checked>
                                                     </label>
                                                 </div>
                                             </div>
@@ -47,7 +47,7 @@
                                                             <span class="custom-option-title mb-2">Siang</span>
                                                             <small>Saya bekerja saat siang hari</small>
                                                         </span>
-                                                        <input name="radio_shift" class="form-check-input" type="radio" value="1" id="radio_siang">
+<input name="radio_shift" class="form-check-input" type="radio" value="2" id="radio_siang">
                                                     </label>
                                                 </div>
                                             </div>
@@ -59,7 +59,7 @@
                                                             <span class="custom-option-title mb-2">Malam</span>
                                                             <small>Saya bekerja saat malam hari</small>
                                                         </span>
-                                                        <input name="radio_shift" class="form-check-input" type="radio" value="2" id="radio_malam">
+                                                        <input name="radio_shift" class="form-check-input" type="radio" value="3" id="radio_malam">
                                                     </label>
                                                 </div>
                                             </div>
@@ -79,6 +79,88 @@
                         <div class="modal-footer">
                             <button type="button" class="btn btn-outline-secondary waves-effect" data-bs-dismiss="modal">Close</button>
                             <button type="submit" class="btn btn-primary waves-effect waves-light">Submit</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Edit Logbook -->
+        <div class="modal fade" id="edit-logbook-modal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <form id="edit-logbook-form" method="POST">
+                        @csrf
+                        @method('PUT')
+                        <div class="modal-header">
+                            <h4 class="modal-title">Edit Isi Logbook</h4>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col mb-6 mt-2">
+                                    <div class="form-floating form-floating-outline">
+                                        <input type="text" id="edit_nameWithTitle" name="nameWithTitle" class="form-control" placeholder="Enter Judul" required>
+                                        <label for="edit_nameWithTitle">Judul</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col mb-6">
+                                    <div class="form-floating form-floating-outline">
+                                        <div class="row">
+                                            <div class="col-md mb-md-0 mb-5">
+                                                <div class="form-check custom-option custom-option-icon">
+                                                    <label class="form-check-label custom-option-content" for="edit_radio_pagi">
+                                                        <span class="custom-option-body">
+                                                            <i class="ri-sun-line"></i>
+                                                            <span class="custom-option-title mb-2">Pagi</span>
+                                                            <small>Saya bekerja saat pagi hari</small>
+                                                        </span>
+                                                        <input name="radio_shift" class="form-check-input" type="radio" value="1" id="edit_radio_pagi">
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md mb-md-0 mb-5">
+                                                <div class="form-check custom-option custom-option-icon">
+                                                    <label class="form-check-label custom-option-content" for="edit_radio_siang">
+                                                        <span class="custom-option-body">
+                                                            <i class="ri-sun-cloudy-line"></i>
+                                                            <span class="custom-option-title mb-2">Siang</span>
+                                                            <small>Saya bekerja saat siang hari</small>
+                                                        </span>
+                                                        <input name="radio_shift" class="form-check-input" type="radio" value="2" id="edit_radio_siang">
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md">
+                                                <div class="form-check custom-option custom-option-icon">
+                                                    <label class="form-check-label custom-option-content" for="edit_radio_malam">
+                                                        <span class="custom-option-body">
+                                                            <i class="ri-moon-line"></i>
+                                                            <span class="custom-option-title mb-2">Malam</span>
+                                                            <small>Saya bekerja saat malam hari</small>
+                                                        </span>
+                                                        <input name="radio_shift" class="form-check-input" type="radio" value="3" id="edit_radio_malam">
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row g-4">
+                                <div class="col mb-2">
+                                    <div class="form-floating form-floating-outline">
+                                        <input type="date" id="edit_dateWithTitle" name="dateWithTitle" class="form-control" required>
+                                        <label for="edit_dateWithTitle">Tanggal Kegiatan</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary waves-effect" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary waves-effect waves-light">Save Changes</button>
                         </div>
                     </form>
                 </div>
@@ -133,7 +215,15 @@
                             </td>
                             <td>
                                 @can('update', $logbook)
-                                    <a href="{{ route('logbook.edit', ['unit_id' => $logbook->unit_id, 'logbook_id' => $logbook->id]) }}" class="btn btn-sm btn-text-secondary rounded-pill btn-icon item-edit"><i class="ri-edit-box-line"></i></a>
+                                    <button type="button" class="btn btn-sm btn-text-secondary rounded-pill btn-icon item-edit" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#edit-logbook-modal"
+                                            data-logbook-id="{{ $logbook->id }}"
+                                            data-judul="{{ $logbook->judul }}"
+                                            data-shift="{{ $logbook->shift }}"
+                                            data-date="{{ $logbook->date }}">
+                                        <i class="ri-edit-box-line"></i>
+                                    </button>
                                     <div class="d-inline-block">
                                         <a href="javascript:;" class="btn btn-sm btn-text-secondary rounded-pill btn-icon dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
                                             <i class="ri-more-2-line"></i>
@@ -153,6 +243,7 @@
 													</form>
                                                 @endif
                                             @endcan
+                                            <li><a href="{{ route('logbook.item.create', ['unit_id' => $logbook->unit_id, 'logbook_id' => $logbook->id]) }}" class="dropdown-item">Add Content</a></li>
                                             <li><a href="{{ route('logbook.view', ['unit_id' => $logbook->unit_id, 'logbook_id' => $logbook->id]) }}" target="_blank" class="dropdown-item">View</a></li>
                                             <div class="dropdown-divider"></div>
                                             <li><a href="javascript:;" data-id="{{ $logbook->id }}" data-unit-id="{{ $unit->id }}" class="dropdown-item text-danger delete-record">Delete</a></li>
@@ -290,6 +381,27 @@
                     }
                 });
             }
+        });
+
+        // Handle Edit Modal
+        $('#edit-logbook-modal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget);
+            var logbookId = button.data('logbook-id');
+            var judul = button.data('judul');
+            var shift = button.data('shift');
+            var date = button.data('date');
+            var unitId = {{ $unit->id }};
+            
+            var modal = $(this);
+            modal.find('#edit_nameWithTitle').val(judul);
+            modal.find('#edit_dateWithTitle').val(date);
+            modal.find('input[name="radio_shift"][value="' + shift + '"]').prop('checked', true);
+            
+            // Update form action
+            var actionUrl = "{{ route('logbook.update', ['unit_id' => ':unit_id', 'logbook_id' => ':logbook_id']) }}";
+            actionUrl = actionUrl.replace(':unit_id', unitId);
+            actionUrl = actionUrl.replace(':logbook_id', logbookId);
+            modal.find('#edit-logbook-form').attr('action', actionUrl);
         });
     });
 </script>
