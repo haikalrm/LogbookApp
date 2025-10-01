@@ -15,5 +15,9 @@ class DatabaseSeeder extends Seeder
         $this->call([
             UnitsSeeder::class, // Menambahkan UnitsSeeder
         ]);
+        // Memanggil UserSeeder untuk menambah data user
+        $this->call([
+            UserSeeder::class, // Menambahkan UserSeeder
+        ]);
     }
 }
