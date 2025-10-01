@@ -46,6 +46,7 @@ Route::middleware('auth')->group(function () {
 	Route::get('/logbook/{unit_id}/dashboard', [LogbookController::class, 'index'])->name('logbook.index');
     Route::get('/logbook/{unit_id}/dashboard/create', [LogbookController::class, 'create'])->name('logbook.create');
     Route::post('/logbook/{unit_id}/dashboard/store', [LogbookController::class, 'store'])->name('logbook.store');
+    Route::get('/logbook/{unit_id}/dashboard/{logbook_id}/items', [LogbookController::class, 'items'])->name('logbook.items');
     Route::get('/logbook/{unit_id}/dashboard/edit/{logbook_id}', [LogbookController::class, 'edit'])->name('logbook.edit');
     Route::put('/logbook/{unit_id}/dashboard/update/{logbook_id}', [LogbookController::class, 'update'])->name('logbook.update');
     Route::delete('/logbook/{unit_id}/dashboard/delete/{logbook_id}', [LogbookController::class, 'destroy'])->name('logbook.destroy');
