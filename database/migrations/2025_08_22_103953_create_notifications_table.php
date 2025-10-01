@@ -17,6 +17,7 @@ return new class extends Migration
 			$table->string('title');
 			$table->text('body');
 			$table->string('profile')->nullable();
+            $table->string('link')->nullable();
 			$table->timestamp('read_at')->nullable();
 			$table->timestamps();
 		});
