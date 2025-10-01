@@ -13,11 +13,10 @@ class User extends Authenticatable
     protected $table = 'users';
 
     /**
-     * Menonaktifkan timestamps `created_at` dan `updated_at`.
-     * PASTIKAN tabel 'users' Anda tidak memiliki kolom ini.
-     * Jika ada, hapus baris ini.
+     * Enable timestamps `created_at` dan `updated_at`.
+     * Pastikan tabel 'users' memiliki kolom timestamps.
      */
-    public $timestamps = false;
+    public $timestamps = true;
 
     protected $fillable = [
         'name', 'gelar', 'username', 'email', 'password',
