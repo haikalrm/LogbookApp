@@ -10,7 +10,7 @@ class Logbook extends Model
     use HasFactory;
 
     protected $fillable = [
-        'unit_id', 'date', 'shift', 'created_by', 'approved_by', 'is_approved', 'catatan', 'signed_by', 'signed_at'
+        'unit_id', 'date', 'shift', 'created_by', 'approved_by', 'is_approved', 'catatan', 'signed_by', 'signed_at', 'judul'
     ];
 
     public function unit()

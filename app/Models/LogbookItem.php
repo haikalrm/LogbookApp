@@ -11,10 +11,10 @@ class LogbookItem extends Model
 
     protected $fillable = [
         'logbook_id', 
-        'judul', 
+        'judul',
         'catatan',
-        'tanggal_kegiatan', 
-        'tools', 
+        'tanggal_kegiatan',
+        'tools',
         'teknisi', 
         'mulai', 
         'selesai'
@@ -29,9 +29,9 @@ class LogbookItem extends Model
     {
         return $this->belongsTo(User::class, 'teknisi');
     }
-	
-	public function teknisi()
+
+    public function teknisi_user()
     {
-        return $this->belongsTo(User::class, 'shift');
+        return $this->belongsTo(User::class, 'teknisi');
     }
 }
