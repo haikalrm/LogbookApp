@@ -215,15 +215,10 @@
                             </td>
                             <td>
                                 @can('update', $logbook)
-                                    <button type="button" class="btn btn-sm btn-text-secondary rounded-pill btn-icon item-edit" 
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#edit-logbook-modal"
-                                            data-logbook-id="{{ $logbook->id }}"
-                                            data-judul="{{ $logbook->judul }}"
-                                            data-shift="{{ $logbook->shift }}"
-                                            data-date="{{ $logbook->date }}">
+                                    <a href="{{ route('logbook.edit.content', ['unit_id' => $logbook->unit_id, 'logbook_id' => $logbook->id]) }}" 
+                                       class="btn btn-sm btn-text-secondary rounded-pill btn-icon item-edit">
                                         <i class="ri-edit-box-line"></i>
-                                    </button>
+                                    </a>
                                     <div class="d-inline-block">
                                         <a href="javascript:;" class="btn btn-sm btn-text-secondary rounded-pill btn-icon dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
                                             <i class="ri-more-2-line"></i>
