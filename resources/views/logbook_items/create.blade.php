@@ -45,15 +45,18 @@
                             @enderror
                         </div>
                         <div class="col-md-6 mb-3">
-                           <label for="alat" class="form-label">Tools <span class="text-danger">Alat</span</label>
-                            <select name="alat" id="alat" class="form-select" required>
+                           <label for="tools" class="form-label">Tools/Alat <span class="text-danger">*</span></label>
+                            <select name="tools" id="tools" class="form-select" required>
                                 <option value="">Pilih Alat</option>
-                                @foreach(\App\Models\Tool::where('name', $unit_id)->get() as $tool)
-                                    <option value="{{ $tool->id }}" {{ old('alat') == $tool->id ? 'selected' : '' }}>
-                                        {{ $tool->nama }} ({{ $tool->kode }})
+                                @foreach(\App\Models\Tool::all() as $tool)
+                                    <option value="{{ $tool->name }}" {{ old('tools') == $tool->name ? 'selected' : '' }}>
+                                        {{ $tool->name }}
                                     </option>
                                 @endforeach
                             </select>
+                            @error('tools')
+                                <div class="text-danger">{{ $message }}</div>
+                            @enderror
                         </div>
                     </div>
 
