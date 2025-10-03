@@ -52,6 +52,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/logbook/{unit_id}/dashboard/delete/{logbook_id}', [LogbookController::class, 'destroy'])->name('logbook.destroy');
 	Route::put('/logbook/{unit_id}/dashboard/approve/{logbook_id}', [LogbookController::class, 'approve'])->name('logbook.approve');
 	Route::get('/logbook/{unit_id}/dashboard/{logbook_id}/view', [LogbookController::class, 'show'])->name('logbook.view');
+	Route::get('/logbook/{unit_id}/dashboard/{logbook_id}/edit-content', [LogbookController::class, 'editContent'])->name('logbook.edit.content');
 	
 	
 	// Routes for Tools
@@ -77,6 +78,8 @@ Route::middleware('auth')->group(function () {
     // Routes for Logbook Items
     Route::get('/logbook/{unit_id}/dashboard/{logbook_id}/item/create', [LogbookItemController::class, 'create'])->name('logbook.item.create');
     Route::post('/logbook/{unit_id}/dashboard/{logbook_id}/item/store', [LogbookItemController::class, 'store'])->name('logbook.item.store');
+    Route::get('/logbook/{unit_id}/dashboard/{logbook_id}/item/{item_id}/edit', [LogbookItemController::class, 'edit'])->name('logbook.item.edit');
+    Route::put('/logbook/{unit_id}/dashboard/{logbook_id}/item/{item_id}', [LogbookItemController::class, 'update'])->name('logbook.item.update');
     Route::delete('/logbook/{unit_id}/dashboard/{logbook_id}/item/{item_id}', [LogbookItemController::class, 'destroy'])->name('logbook.item.destroy');
 });
 
