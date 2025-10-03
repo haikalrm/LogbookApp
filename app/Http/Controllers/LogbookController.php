@@ -177,4 +177,17 @@ public function store(Request $request, $unit_id)
 
         return response()->json(['success' => true, 'message' => 'Logbook berhasil dihapus']);
     }
+
+    public function editContent($unit_id, $logbook_id)
+    {
+        $unit = Unit::findOrFail($unit_id);
+        $logbook = Logbook::findOrFail($logbook_id);
+        // Query langsung untuk items terbaru
+        $logbookItems = LogbookItem::with('teknisi_user')
+                                  ->where('logbook_id', $logbook_id)
+                                  ->orderBy('created_at', 'asc')
+                                  ->get();
+        
+        return view('logbook.edit-content', compact('unit', 'logbook', 'logbookItems', 'unit_id'));
+    }
 }
