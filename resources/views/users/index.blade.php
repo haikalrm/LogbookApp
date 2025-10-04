@@ -3,6 +3,7 @@
 @section('title', 'Manage Users')
 
 @section('content')
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 	<style>
         .signature-container {
             display: flex;
@@ -12,8 +13,18 @@
             background-color: #fff;
             padding: 20px;
             border-radius: 8px;
-        }
-        #signature-pad {
+       						<div class="col-md-6 col-sm-12">
+							<div class="form-floating form-floating-outline">
+								<input type="text" id="editFirstName" name="editFirstName" class="form-control" placeholder="John" required />
+								<label for="editFirstName">First Name</label>
+							</div>
+						</div>
+						<div class="col-md-6 col-sm-12">
+							<div class="form-floating form-floating-outline">
+								<input type="text" id="editLastName" name="editLastName" class="form-control" placeholder="Doe" required />
+								<label for="editLastName">Last Name</label>
+							</div>
+						</div>signature-pad {
             border: 2px solid #000;
             background-color: #fff;
         }
@@ -79,7 +90,11 @@
                                 </td>
                                 <td>{{ $user->position }}</td>
                                 <td>
-                                    <img src="{{ asset('storage/signatures/' . $user->signature) }}" alt="Signature" style="width: 80%; height: 80%;" />
+                                    @if($user->signature)
+                                        <img src="{{ $user->signature }}" alt="Signature" style="width: 80px; height: 40px; object-fit: contain;" />
+                                    @else
+                                        <span class="text-muted">No signature</span>
+                                    @endif
                                 </td>
                                 <td>
                                     <div class="d-flex align-items-center gap-50">
@@ -412,13 +427,13 @@
 						<input type="hidden" id="editUserId" name="user_id">
 						<div class="col-12 col-md-6">
 							<div class="form-floating form-floating-outline">
-								<input type="text" id="editFirstName" name="modalAddressFirstName" class="form-control" placeholder="John" required />
+								<input type="text" id="editFirstName" name="editFirstName" class="form-control" placeholder="John" required />
 								<label for="editFirstName">First Name</label>
 							</div>
 						</div>
 						<div class="col-12 col-md-6">
 							<div class="form-floating form-floating-outline">
-								<input type="text" id="editLastName" name="modalAddressLastName" class="form-control" placeholder="Doe" required />
+								<input type="text" id="editLastName" name="editLastName" class="form-control" placeholder="Doe" required />
 								<label for="editLastName">Last Name</label>
 							</div>
 						</div>
@@ -427,7 +442,7 @@
 							<input
 							  type="text"
 							  id="editUsername"
-							  name="modalUsername"
+							  name="editUsername"
 							  class="form-control"
 							  placeholder="LunarEcho" required />
 							<label for="editUsername">Username</label>
@@ -438,7 +453,7 @@
 							<input
 							  type="text"
 							  id="editGelar"
-							  name="modalGelar"
+							  name="editGelar"
 							  class="form-control"
 							  placeholder="S.Kom." />
 							<label for="editGelar">Title</label>
@@ -446,7 +461,7 @@
 						</div>
 						<div class="col-12">
 							<div class="form-floating form-floating-outline">
-								<select id="editCountry" name="modalAddressCountry" class="select2 form-select" data-allow-clear="true">
+								<select id="editCountry" name="editCountry" class="select2 form-select" data-allow-clear="true">
 									<option value="Australia">Australia</option>
 									<option value="Bangladesh">Bangladesh</option>
 									<option value="Belarus">Belarus</option>
@@ -476,13 +491,13 @@
 						</div>
 						<div class="col-12 col-md-6">
 							<div class="form-floating form-floating-outline">
-								<input type="text" id="editEmail" name="modalAddressEmail" class="form-control" placeholder="user@haikal.engineer" required />
+								<input type="text" id="editEmail" name="editEmail" class="form-control" placeholder="user@haikal.engineer" required />
 								<label for="editEmail">Email</label>
 							</div>
 						</div>
 						<div class="col-12 col-md-6">
 							<div class="form-floating form-floating-outline">
-								<select class="form-select" id="editPosition" name="inputGroupSelect01">
+								<select class="form-select" id="editPosition" name="editPosition">
 									@foreach ($positions as $position)
 										<option value="{{ $position->no }}">{{ $position->name }}</option>
 									@endforeach
@@ -492,43 +507,43 @@
 						</div>
 						<div class="col-12">
 							<div class="form-floating form-floating-outline">
-								<input type="text" id="editAddress1" name="modalAddressAddress1" class="form-control" placeholder="Merdeka Square" required />
+								<input type="text" id="editAddress1" name="editAddress1" class="form-control" placeholder="Merdeka Square" required />
 								<label for="editAddress1">Address Line 1</label>
 							</div>
 						</div>
 						<div class="col-12">
 							<div class="form-floating form-floating-outline">
-								<input type="text" id="editAddress2" name="modalAddressAddress2" class="form-control" placeholder="Monas Street Square" />
+								<input type="text" id="editAddress2" name="editAddress2" class="form-control" placeholder="Monas Street Square" />
 								<label for="editAddress2">Address Line 2</label>
 							</div>
 						</div>
 						<div class="col-12 col-md-6">
 							<div class="form-floating form-floating-outline">
-								<input type="text" id="editPhoneNumber" name="modalPhoneNumber" class="form-control" placeholder="+62" required />
+								<input type="text" id="editPhoneNumber" name="editPhoneNumber" class="form-control" placeholder="+62" required />
 								<label for="editPhoneNumber">Phone Number</label>
 							</div>
 						</div>
 						<div class="col-12 col-md-6">
 							<div class="form-floating form-floating-outline">
-								<input type="text" id="editCity" name="modalAddressCity" class="form-control" placeholder="Jakarta" required />
+								<input type="text" id="editCity" name="editCity" class="form-control" placeholder="Jakarta" required />
 								<label for="editCity">City</label>
 							</div>
 						</div>
 						<div class="col-12 col-md-6">
 							<div class="form-floating form-floating-outline">
-								<input type="text" id="editState" name="modalAddressState" class="form-control" placeholder="Central Jakarta City" required />
+								<input type="text" id="editState" name="editState" class="form-control" placeholder="Central Jakarta City" required />
 								<label for="editState">State</label>
 							</div>
 						</div>
 						<div class="col-12 col-md-6">
 							<div class="form-floating form-floating-outline">
-								<input type="text" id="editZipCode" name="modalAddressZipCode" class="form-control" placeholder="10110" required />
+								<input type="text" id="editZipCode" name="editZipCode" class="form-control" placeholder="10110" required />
 								<label for="editZipCode">Zip Code</label>
 							</div>
 						</div>
 						<div class="col-12 mt-6">
 							<div class="form-check form-switch">
-								<input type="checkbox" class="form-check-input" id="editTechnician" name="technician" />
+								<input type="checkbox" class="form-check-input" id="editTechnician" name="editTechnician" />
 								<label for="editTechnician">Is this user a technician?</label>
 							</div>
 						</div>
@@ -540,7 +555,7 @@
 								<button id="edit-clear-button" class="btn btn-text-warning waves-effect waves-light">Reset</button>
 							</div>
 						</div>
-						<input type="hidden" id="editSignature" name="signature">
+						<input type="hidden" id="editSignature" name="editSignature">
 						<div class="col-12 mt-6 d-flex flex-wrap justify-content-center gap-4 row-gap-4">
 							<button type="submit" class="btn btn-primary">Submit</button>
 							<button type="reset" class="btn btn-outline-secondary" data-bs-dismiss="modal" aria-label="Close">Cancel</button>
@@ -751,39 +766,46 @@ $(document).ready(function() {
 	var isSubmitting = false;
 	$('#addNewUserForm').on('submit', function (e) {
 		e.preventDefault();
+		console.log('Form submission started');
 		if (isSubmitting) {
+			console.log('Already submitting, returning');
 			return; // prevent multiple submissions
 		}
 		isSubmitting = true;
 		var canvas = document.getElementById('signature-pad');
 		if (isCanvasBlank(canvas)) {
+			console.log('Canvas is blank, showing alert');
 			alert('Please provide a signature.');
+			isSubmitting = false;
 			return false;
 		}
+		console.log('Canvas has signature, proceeding');
 		var signatureData = canvas.toDataURL('image/png');
 		document.getElementById('signature').value = signatureData;
 		var formData = $(this).serialize();
+		console.log('Form data:', formData);
 		$.ajax({
-			url: 'users/add', // Ensure the URL is correct
+			url: '{{ route("users.store") }}',
 			type: 'POST',
-			data: formData, // Directly pass the serialized form data
+			data: formData,
 			dataType: 'json',
 			success: function(data) {
-				console.log(data); // Debug: Check the response data
+				console.log('Success response:', data);
 				if (data.success) {
-					saveCurrentPage(); // Save the current page
-					window.location.replace("?successMessage=" + encodeURIComponent(data.message));
+					alert(data.message);
+					location.reload();
 				} else {
-					window.location.replace("?errorMessage=" + encodeURIComponent(data.message));
+					alert(data.message || 'Terjadi kesalahan saat menambahkan user');
 				}
 			},
 			error: function(jqXHR, textStatus, errorThrown) {
 				console.error('AJAX Error:', textStatus, errorThrown);
 				console.error('Response Text:', jqXHR.responseText);
+				console.error('Status Code:', jqXHR.status);
 				alert('An error occurred. Please try again.');
 			},
 			complete: function() {
-				isSubmitting = false; // Reset isSubmitting flag
+				isSubmitting = false;
 			}
 		});
 	});
@@ -791,9 +813,8 @@ $(document).ready(function() {
 	$('#users_list').on('click', '.edit-record', function () {
 		var userId = $(this).data('id');
 		$.ajax({
-			url: 'users/get_user.php',
+			url: '{{ route("users.edit", ":id") }}'.replace(':id', userId),
 			type: 'GET',
-			data: { user_id: userId },
 			dataType: 'json',
 			success: function(data) {
 				if (data.success) {
@@ -839,44 +860,8 @@ $(document).ready(function() {
 					}
 					
 					// Set up the signature pad for editing
-					let drawing = false;
-					let prevX = 0;
-					let prevY = 0;
-	
-					// Event listeners for drawing
-					editCanvas.addEventListener("mousedown", (e) => {
-						drawing = true;
-						prevX = e.clientX - editCanvas.getBoundingClientRect().left;
-						prevY = e.clientY - editCanvas.getBoundingClientRect().top;
-					});
-	
-					editCanvas.addEventListener("mousemove", (e) => {
-						if (!drawing) return;
-						draw(e.clientX - editCanvas.getBoundingClientRect().left, e.clientY - editCanvas.getBoundingClientRect().top);
-					});
-	
-					editCanvas.addEventListener("mouseup", () => {
-						drawing = false;
-					});
-	
-					editCanvas.addEventListener("mouseleave", () => {
-						drawing = false;
-					});
-	
-					// Function to draw on the canvas
-					function draw(x, y) {
-						ctx.beginPath();
-						ctx.strokeStyle = "#000";
-						ctx.lineWidth = 2;
-						ctx.lineJoin = "round";
-						ctx.moveTo(prevX, prevY);
-						ctx.lineTo(x, y);
-						ctx.closePath();
-						ctx.stroke();
-						prevX = x;
-						prevY = y;
-					}
-	
+					setupEditSignaturePad();
+					
 					$('#editUserModal').modal('show');
 				} else {
 					alert(data.message);
@@ -888,29 +873,89 @@ $(document).ready(function() {
 		});
 	});
 
+	function setupEditSignaturePad() {
+		let editCanvas = document.getElementById('edit-signature-pad');
+		let ctx = editCanvas.getContext('2d');
+		let drawing = false;
+		let prevX = 0;
+		let prevY = 0;
+
+		// Remove existing event listeners
+		editCanvas.removeEventListener("mousedown", editCanvasMouseDown);
+		editCanvas.removeEventListener("mousemove", editCanvasMouseMove);
+		editCanvas.removeEventListener("mouseup", editCanvasMouseUp);
+		editCanvas.removeEventListener("mouseleave", editCanvasMouseLeave);
+
+		// Add new event listeners
+		editCanvas.addEventListener("mousedown", editCanvasMouseDown);
+		editCanvas.addEventListener("mousemove", editCanvasMouseMove);
+		editCanvas.addEventListener("mouseup", editCanvasMouseUp);
+		editCanvas.addEventListener("mouseleave", editCanvasMouseLeave);
+
+		function editCanvasMouseDown(e) {
+			drawing = true;
+			prevX = e.clientX - editCanvas.getBoundingClientRect().left;
+			prevY = e.clientY - editCanvas.getBoundingClientRect().top;
+		}
+
+		function editCanvasMouseMove(e) {
+			if (!drawing) return;
+			drawEdit(e.clientX - editCanvas.getBoundingClientRect().left, e.clientY - editCanvas.getBoundingClientRect().top);
+		}
+
+		function editCanvasMouseUp() {
+			drawing = false;
+		}
+
+		function editCanvasMouseLeave() {
+			drawing = false;
+		}
+
+		function drawEdit(x, y) {
+			ctx.beginPath();
+			ctx.strokeStyle = "#000";
+			ctx.lineWidth = 2;
+			ctx.lineJoin = "round";
+			ctx.moveTo(prevX, prevY);
+			ctx.lineTo(x, y);
+			ctx.closePath();
+			ctx.stroke();
+			prevX = x;
+			prevY = y;
+		}
+	}
+
 	// Edit User Form Submission
 	$('#editUserForm').on('submit', function (e) {
 		e.preventDefault();
 		var canvas = document.getElementById('edit-signature-pad');
 		if (isCanvasBlank(canvas)) {
-			window.location.replace("?errorMessage=Please provide a signature.");
+			alert('Please provide a signature.');
 			return false;
 		}
 		var signatureData = canvas.toDataURL('image/png');
 		document.getElementById('editSignature').value = signatureData;
 		var formData = $(this).serialize();
+		var userId = $('#editUserId').val();
+		
 		$.ajax({
-			url: 'users/update',
-			type: 'POST',
+			url: '{{ route("users.update", ":id") }}'.replace(':id', userId),
+			type: 'PUT',
 			data: formData,
 			dataType: 'json',
 			success: function(data) {
 				if (data.success) {
-					saveCurrentPage();
-					window.location.replace("?successMessage=" + encodeURIComponent(data.message));
+					alert(data.message);
+					$('#editUserModal').modal('hide');
+					location.reload();
 				} else {
-					window.location.replace("?errorMessage=" + encodeURIComponent(data.message));
+					alert(data.message || 'Terjadi kesalahan saat mengupdate user');
 				}
+			},
+			error: function(jqXHR, textStatus, errorThrown) {
+				console.error('Edit AJAX Error:', textStatus, errorThrown);
+				console.error('Edit Response Text:', jqXHR.responseText);
+				alert('An error occurred. Please try again.');
 			},
 			error: function(jqXHR, textStatus, errorThrown) {
 				console.error('AJAX Error:', textStatus, errorThrown);
@@ -921,39 +966,31 @@ $(document).ready(function() {
 	});
 	
 	$('#users_list').on('click', '.delete-record', function () {
-			var $row = $(this).closest('tr');
-			var id = $(this).data('id');
-			var table = $('#users_list').DataTable();
-			var currentPage = table.page();
-			var recordsOnPage = table.rows({ page: 'current' }).count(); // Menggunakan .count()
-	
-			if (confirm('Apakah Anda yakin ingin menghapus user ini?')) {
-				$.ajax({
-					url: 'users/delete', // Pastikan URL benar
-					type: 'POST',
-					data: { user_id: id },
-					dataType: 'json',
-					success: function(data) {
-						if (data.success) {
-							table.row($row).remove().draw(false);
-							// Perbarui nomor urut
-							table.rows().every(function (rowIdx, tableLoop, rowLoop) {
-								this.cell(rowIdx, 0).data(rowIdx + 1); // Update nomor urut
-							}).draw(false);
-	
-							// Pindah ke halaman sebelumnya jika halaman saat ini kosong setelah penghapusan
-							if (recordsOnPage === 1 && currentPage > 0) {
-								table.page(currentPage - 1).draw('page');
-							}
-						} else {
-							alert(data.message);
-						}
-					},
-					error: function(jqXHR, textStatus, errorThrown) {
-						alert('Error sending request. Please try again.');
+		var $row = $(this).closest('tr');
+		var id = $(this).data('id');
+
+		if (confirm('Apakah Anda yakin ingin menghapus user ini?')) {
+			$.ajax({
+				url: '{{ route("users.destroy", ":id") }}'.replace(':id', id),
+				type: 'DELETE',
+				data: {
+					_token: $('meta[name="csrf-token"]').attr('content')
+				},
+				dataType: 'json',
+				success: function(data) {
+					if (data.success) {
+						alert(data.message);
+						location.reload();
+					} else {
+						alert(data.message);
 					}
-				});
-			}
+				},
+				error: function(jqXHR, textStatus, errorThrown) {
+					console.error('AJAX Error:', textStatus, errorThrown);
+					alert('Error sending request. Please try again.');
+				}
+			});
+		}
 	});
 });
 const editClearButton = document.getElementById("edit-clear-button");
