@@ -11,6 +11,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Memanggil PositionSeeder untuk menambah data posisi
+        $this->call([
+            PositionSeeder::class, // Menambahkan PositionSeeder
+        ]);
         // Memanggil UnitsSeeder untuk menambah data unit
         $this->call([
             UnitsSeeder::class, // Menambahkan UnitsSeeder
