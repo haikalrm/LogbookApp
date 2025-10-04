@@ -13,7 +13,7 @@ class Position extends Model
     protected $primaryKey = 'no';         // Primary key
     public $incrementing = true;          // Auto increment aktif
     protected $keyType = 'int';           // PK tipe integer
-    public $timestamps = false;           // Nonaktifkan timestamps (kalau tidak ada created_at/updated_at)
+    public $timestamps = true;            // Aktifkan timestamps (ada created_at/updated_at di migration)
     
     protected $fillable = ['name'];       // Kolom yang bisa diisi
 }
