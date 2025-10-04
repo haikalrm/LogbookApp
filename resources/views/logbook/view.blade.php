@@ -5,516 +5,423 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Logbook - {{ $logbook->judul }}</title>
     <style>
-        @media print {
-            @page {
-                size: A4;
-                margin: 1cm;
-            }
-            body {
-                -webkit-print-color-adjust: exact;
-                color-adjust: exact;
-            }
-            .no-print {
-                display: none !important;
-            }
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: Arial, sans-serif;
+            background-color: #fff;
+            margin: 0;
             font-size: 12px;
             line-height: 1.4;
             color: #333;
-            background: white;
         }
 
-        .container {
-            max-width: 210mm;
-            margin: 0 auto;
-            padding: 20px;
-            background: white;
+        @media print {
+            .print-button, .close-button, .navbar-header, .no-print {
+                display: none !important;
+            }
+            body {
+                margin: 0 !important;
+                font-size: 12px;
+            }
+            table {
+                width: 100%;
+            }
+            td, th {
+                page-break-inside: avoid;
+            }
+            @page {
+                size: auto;
+                margin: 10mm;
+            }
         }
 
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #333;
-            padding-bottom: 15px;
+        .navbar {
+            background-color: #333;
+            color: #fff;
+            padding: 10px 0;
         }
 
-        .header h1 {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 5px;
-            text-transform: uppercase;
+        .navbar-header {
+            padding: 0 20px;
         }
 
-        .header h2 {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 10px;
+        .close-button, .print-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 0 5px;
         }
 
-        .logbook-info {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 20px;
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 5px;
+        .close-button {
+            background: #dc3545;
         }
 
-        .info-group {
+        .close-button:hover {
+            background: #c82333;
+        }
+
+        .print-button:hover {
+            background: #0056b3;
+        }
+
+        header {
+            background-color: #fff;
+            padding: 10px 0;
             display: flex;
-            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        .info-label {
+        .logo {
+            width: 70px;
+            height: 70px;
+            background-color: #ccc;
+            border-radius: 50%;
+            margin-left: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .logo img {
+            width: 70px;
+            height: 70px;
+            object-fit: cover;
+        }
+
+        .title-container {
+            flex-grow: 1;
+            text-align: center;
+        }
+
+        .title-container h1 {
+            margin: 0;
+            font-size: 24px;
             font-weight: bold;
-            margin-bottom: 5px;
-            color: #555;
         }
 
-        .info-value {
-            padding: 8px;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 3px;
-            min-height: 35px;
+        .title-container h4 {
+            margin: 5px 0 0 0;
+            font-size: 16px;
+            font-weight: normal;
         }
 
-        .content-section {
-            margin-bottom: 30px;
+        .info-section {
+            margin: 0 auto;
+            width: 95%;
         }
 
-        .section-title {
-            font-size: 14px;
-            font-weight: bold;
-            margin-bottom: 15px;
-            padding: 8px;
-            background: #e9ecef;
-            border-left: 4px solid #007bff;
-        }
-
-        .items-table {
+        .section-container {
+            display: flex;
+            justify-content: space-between;
             width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
         }
 
-        .items-table th,
-        .items-table td {
-            border: 1px solid #333;
+        .left-column {
+            flex: 7;
+        }
+
+        .right-column {
+            flex: 3;
+        }
+
+        .info-table {
+            border-collapse: collapse;
+            width: 100%;
+            max-width: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+
+        .info-table td {
+            padding: 8px;
+            border: none;
+            vertical-align: top;
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+
+        .info-left {
+            text-align: left;
+            width: 20%;
+            font-weight: bold;
+        }
+
+        .info-center {
+            text-align: left;
+            width: 40%;
+        }
+
+        .info-right {
+            text-align: right;
+            width: 40%;
+            padding: 8px;
+        }
+
+        .teknisi-container {
+            display: inline-block;
+            text-align: left;
+            margin-right: 50px;
+            vertical-align: bottom;
+        }
+
+        .underline {
+            display: inline-block;
+            border-bottom: 1px solid black;
+            width: 150px;
+            vertical-align: bottom;
+            padding-bottom: 2px;
+        }
+
+        .logbook-table {
+            width: 95%;
+            margin: 20px auto;
+            border-collapse: collapse;
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+
+        .logbook-table th,
+        .logbook-table td {
+            border: 1px solid #ddd;
             padding: 8px;
             text-align: left;
             vertical-align: top;
         }
 
-        .items-table th {
-            background: #f8f9fa;
+        .logbook-table th {
+            background-color: #f0f0f0;
+            text-align: center;
             font-weight: bold;
+        }
+
+        .logbook-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .signature-section {
+            width: 95%;
+            margin: 20px;
+            text-align: right;
+        }
+
+        .signature-container {
+            display: inline-block;
+            margin-top: 50px;
             text-align: center;
         }
 
-        .items-table .no-col {
+        .signature-container img {
+            width: 200px;
+            height: auto;
+            margin-top: 10px;
+        }
+
+        .shift-checkbox {
+            margin: 0 5px;
+        }
+
+        .no-col {
             width: 40px;
             text-align: center;
         }
 
-        .items-table .time-col {
-            width: 80px;
-        }
-
-        .items-table .duration-col {
-            width: 100px;
-        }
-
-        .empty-row {
-            height: 40px;
-        }
-
-        .signature-section {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 30px;
-            margin-top: 40px;
+        .time-col {
+            width: 120px;
             text-align: center;
         }
 
-        .signature-box {
-            border: 1px solid #333;
-            padding: 15px;
-            min-height: 120px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+        .duration-col {
+            width: 80px;
+            text-align: center;
         }
 
-        .signature-title {
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        .signature-line {
-            border-top: 1px solid #333;
-            margin-top: 60px;
-            padding-top: 5px;
-            font-size: 11px;
-        }
-
-        .print-info {
-            text-align: right;
-            font-size: 10px;
-            color: #666;
-            margin-top: 20px;
-        }
-
-        .btn-print {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #007bff;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-            z-index: 1000;
-        }
-
-        .btn-print:hover {
-            background: #0056b3;
-        }
-
-        .shift-badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 3px;
-            font-size: 11px;
-            font-weight: bold;
-        }
-
-        .shift-pagi {
-            background: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeaa7;
-        }
-
-        .shift-siang {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .shift-malam {
-            background: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 3px;
-            font-size: 11px;
-            font-weight: bold;
-        }
-
-        .status-pending {
-            background: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeaa7;
-        }
-
-        .status-approved {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+        .signature-col {
+            width: 95px;
+            text-align: center;
         }
     </style>
 </head>
 <body>
-    <button class="btn-print no-print" onclick="window.print()">
-        🖨️ Print Logbook
-    </button>
-    
-    <button class="btn-add-content no-print" data-bs-toggle="modal" data-bs-target="#addContentModal" 
-            style="position: fixed; top: 60px; right: 20px; z-index: 1000; background: #28a745; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer;">
-        ➕ Add Content
-    </button>
-
-    <div class="container">
-        <div class="header">
-            <h1>LOGBOOK KEGIATAN</h1>
-            <h2>{{ strtoupper($logbook->unit->nama ?? 'UNIT KERJA') }}</h2>
+    <nav class="navbar no-print">
+        <div class="navbar-header">
+            <button class="close-button" onclick="window.history.back()">← Kembali</button>
+            Logbook - {{ $logbook->judul }}
+            <button class="print-button" onclick="window.print()">🖨️ Print Logbook</button>
         </div>
+    </nav>
 
-        <div class="logbook-info">
-            <div class="info-group">
-                <div class="info-label">Judul Logbook:</div>
-                <div class="info-value">{{ $logbook->judul }}</div>
+    <div id="view_pdf">
+        <header>
+            <div class="logo">
+                <!-- You can add logo here -->
+                <img src="/assets/img/branding/logo-small.png" alt="Logo" style="width: 70px; height: 70px;" onerror="this.style.display='none'">
             </div>
-            <div class="info-group">
-                <div class="info-label">Tanggal Kegiatan:</div>
-                <div class="info-value">{{ \Carbon\Carbon::parse($logbook->date)->format('d F Y') }}</div>
+            <div class="title-container">
+                <h1>BUKU CATATAN FASILITAS DAN KEGIATAN</h1>
+                <h4>(FACILITY LOG BOOK)</h4>
             </div>
-            <div class="info-group">
-                <div class="info-label">Shift:</div>
-                <div class="info-value">
-                    @if($logbook->shift == '1')
-                        <span class="shift-badge shift-pagi">PAGI</span>
-                    @elseif($logbook->shift == '2')
-                        <span class="shift-badge shift-siang">SIANG</span>
-                    @elseif($logbook->shift == '3')
-                        <span class="shift-badge shift-malam">MALAM</span>
-                    @endif
-                </div>
-            </div>
-            <div class="info-group">
-                <div class="info-label">Status:</div>
-                <div class="info-value">
-                    @if($logbook->is_approved == 0)
-                        <span class="status-badge status-pending">PENDING</span>
-                    @else
-                        <span class="status-badge status-approved">APPROVED</span>
-                    @endif
-                </div>
-            </div>
-        </div>
+        </header>
 
-        <div class="content-section">
-            <div class="section-title">DETAIL KEGIATAN</div>
-            <table class="items-table">
-                <thead>
-                    <tr>
-                        <th class="no-col">No</th>
-                        <th>Kegiatan</th>
-                        <th class="time-col">Mulai</th>
-                        <th class="time-col">Selesai</th>
-                        <th class="duration-col">Durasi</th>
-                        <th>Teknisi</th>
-                        <th>Catatan</th>
-                        <th class="no-print" style="width: 100px;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($logbookItems as $index => $item)
-                    <tr>
-                        <td class="no-col">{{ $index + 1 }}</td>
-                        <td>{{ $item->judul ?? '-' }}</td>
-                        <td>{{ $item->mulai ? \Carbon\Carbon::parse($item->mulai)->format('d/m/Y H:i') : '-' }}</td>
-                        <td>{{ $item->selesai ? \Carbon\Carbon::parse($item->selesai)->format('d/m/Y H:i') : '-' }}</td>
-                        <td>
-                            @if($item->mulai && $item->selesai)
+        <div class="info-section">
+            <div class="section-container">
+                <div class="left-column">
+                    <table class="info-table">
+                        <tr>
+                            <td class="info-left">PENYELENGGARA PELAYANAN:</td>
+                            <td class="info-center">PERUM LPPNPI CABANG JATSC</td>
+                        </tr>
+                        <tr>
+                            <td class="info-left">KELOMPOK FASILITAS:</td>
+                            <td class="info-center">{{ strtoupper($logbook->unit->nama ?? 'UNIT KERJA') }}</td>
+                        </tr>
+                        <tr>
+                            <td class="info-left">NAMA PERALATAN:</td>
+                            <td class="info-center">
                                 @php
-                                    $mulai = \Carbon\Carbon::parse($item->mulai);
-                                    $selesai = \Carbon\Carbon::parse($item->selesai);
-                                    $diff = $mulai->diff($selesai);
-                                    $durasi = '';
-                                    if($diff->d > 0) $durasi .= $diff->d . ' hari ';
-                                    if($diff->h > 0) $durasi .= $diff->h . ' jam ';
-                                    if($diff->i > 0) $durasi .= $diff->i . ' menit';
-                                    echo trim($durasi) ?: '0 menit';
+                                    $unique_tools = $logbookItems->pluck('tools')->unique()->filter()->toArray();
+                                    $tool_count = count($unique_tools);
+                                    $font_size = max(12, 18 - ($tool_count * 1.2));
                                 @endphp
-                            @else
-                                -
-                            @endif
-                        </td>
-                        <td>{{ $item->teknisi_user->name ?? 'Unknown' }}</td>
-                        <td>{{ $item->catatan ?? '-' }}</td>
-                        <td class="no-print">
-                            <div class="btn-group" role="group">
-                                <a href="{{ route('logbook.item.edit', ['unit_id' => $unit_id, 'logbook_id' => $logbook->id, 'item_id' => $item->id]) }}" 
-                                   class="btn btn-sm btn-warning" title="Edit">
-                                    ✏️
-                                </a>
-                                <button type="button" class="btn btn-sm btn-danger" 
-                                        onclick="deleteItem({{ $item->id }})" title="Delete">
-                                    🗑️
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    @empty
-                    @for($i = 1; $i <= 10; $i++)
-                    <tr class="empty-row">
+                                @foreach($unique_tools as $index => $tool)
+                                    <span style="font-size: {{ $font_size }}px;">{{ $tool }}</span>
+                                    @if($index < count($unique_tools) - 1) / @endif
+                                @endforeach
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="info-left">TANGGAL:</td>
+                            <td class="info-center">{{ strtoupper(\Carbon\Carbon::parse($logbook->date)->translatedFormat('d F Y')) }}</td>
+                        </tr>
+                        <tr>
+                            <td class="info-left">SHIFT:</td>
+                            <td class="info-center">
+                                <input type="checkbox" {{ $logbook->shift == '1' ? 'checked' : '' }} disabled class="shift-checkbox"> P
+                                <input type="checkbox" {{ $logbook->shift == '2' ? 'checked' : '' }} disabled class="shift-checkbox"> S
+                                <input type="checkbox" {{ $logbook->shift == '3' ? 'checked' : '' }} disabled class="shift-checkbox"> M
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="right-column">
+                    <div class="info-right">
+                        @php
+                            $unique_teknisi = $logbookItems->pluck('teknisi_user.name')->unique()->filter()->values()->toArray();
+                        @endphp
+                        @for($i = 0; $i < 5; $i++)
+                            <p>
+                                <span class="teknisi-container">
+                                    <span class="underline">
+                                        {{ $i + 1 }}.
+                                        @if(isset($unique_teknisi[$i]))
+                                            {{ $unique_teknisi[$i] }}
+                                        @endif
+                                    </span>
+                                </span>
+                            </p>
+                        @endfor
+                    </div>
+                </div>
+            </div>
+        </div>
+        <table class="logbook-table">
+            <thead>
+                <tr>
+                    <th class="no-col">NO.</th>
+                    <th class="time-col">TANGGAL/JAM</th>
+                    <th class="duration-col">DURASI</th>
+                    <th>CATATAN/TINDAKAN</th>
+                    <th>NAMA TEKNISI</th>
+                    <th class="signature-col">PARAF</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($logbookItems as $index => $item)
+                <tr>
+                    <td class="no-col">{{ $index + 1 }}</td>
+                    <td class="time-col">{{ $item->mulai ? \Carbon\Carbon::parse($item->mulai)->format('d/m/Y H:i') : '-' }}</td>
+                    <td class="duration-col">
+                        @if($item->mulai && $item->selesai)
+                            @php
+                                $mulai = \Carbon\Carbon::parse($item->mulai);
+                                $selesai = \Carbon\Carbon::parse($item->selesai);
+                                $diff = $mulai->diff($selesai);
+                                $durasi = '';
+                                if($diff->d > 0) $durasi .= $diff->d . ' hari ';
+                                if($diff->h > 0) $durasi .= $diff->h . ' jam ';
+                                if($diff->i > 0) $durasi .= $diff->i . ' menit ';
+                                if($diff->s > 0 || empty(trim($durasi))) $durasi .= $diff->s . ' detik';
+                                echo trim($durasi);
+                            @endphp
+                        @else
+                            -
+                        @endif
+                    </td>
+                    <td>{{ $item->catatan ?? '-' }}</td>
+                    <td>{{ $item->teknisi_user->name ?? 'Unknown' }}</td>
+                    <td class="signature-col">
+                        @if($item->teknisi_user && $item->teknisi_user->signature)
+                            <img src="{{ $item->teknisi_user->signature }}" alt="Paraf Teknisi" style="width: 50px; height: 25px;">
+                        @else
+                            -
+                        @endif
+                    </td>
+                </tr>
+                @empty
+                @for($i = 1; $i <= 10; $i++)
+                <tr style="height: 40px;">
+                    <td class="no-col">{{ $i }}</td>
+                    <td class="time-col"></td>
+                    <td class="duration-col"></td>
+                    <td></td>
+                    <td></td>
+                    <td class="signature-col"></td>
+                </tr>
+                @endfor
+                @endforelse
+
+                @if(count($logbookItems) > 0 && count($logbookItems) < 10)
+                    @for($i = count($logbookItems) + 1; $i <= 10; $i++)
+                    <tr style="height: 40px;">
                         <td class="no-col">{{ $i }}</td>
+                        <td class="time-col"></td>
+                        <td class="duration-col"></td>
                         <td></td>
                         <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td class="no-print"></td>
+                        <td class="signature-col"></td>
                     </tr>
                     @endfor
-                    @endforelse
-
-                    @if(count($logbookItems) > 0 && count($logbookItems) < 10)
-                        @for($i = count($logbookItems) + 1; $i <= 10; $i++)
-                        <tr class="empty-row">
-                            <td class="no-col">{{ $i }}</td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                        </tr>
-                        @endfor
-                    @endif
-                </tbody>
-            </table>
-        </div>
+                @endif
+            </tbody>
+        </table>
 
         <div class="signature-section">
-            <div class="signature-box">
-                <div class="signature-title">DIBUAT OLEH</div>
-                <div class="signature-line">
-                    {{ $logbook->createdBy->name ?? 'N/A' }}<br>
-                    <small>{{ \Carbon\Carbon::parse($logbook->created_at)->format('d/m/Y H:i') }}</small>
-                </div>
-            </div>
-            <div class="signature-box">
-                <div class="signature-title">DISETUJUI OLEH</div>
-                <div class="signature-line">
-                    @if($logbook->is_approved && $logbook->approvedBy)
-                        {{ $logbook->approvedBy->name }}<br>
-                        <small>{{ $logbook->signed_at ? \Carbon\Carbon::parse($logbook->signed_at)->format('d/m/Y H:i') : 'Belum ditandatangani' }}</small>
+            @if($logbook->is_approved && $logbook->approvedBy)
+                <div class="signature-container">
+                    Jakarta, {{ \Carbon\Carbon::parse($logbook->date)->translatedFormat('d F Y') }}<br>
+                    {{ $logbook->approvedBy->position ?? 'Atasan' }}<br>
+                    @if($logbook->approvedBy->signature)
+                        <img src="{{ $logbook->approvedBy->signature }}" alt="Tanda Tangan" style="width: 200px; height: auto; margin-top: 10px;"><br>
                     @else
-                        <small>Belum disetujui</small>
+                        <div style="height: 80px; margin-top: 10px;"></div>
                     @endif
+                    {{ $logbook->approvedBy->name }}{{ $logbook->approvedBy->gelar ? ', ' . $logbook->approvedBy->gelar : '' }}
                 </div>
-            </div>
-            <div class="signature-box">
-                <div class="signature-title">MENGETAHUI</div>
-                <div class="signature-line">
-                    @if($logbook->signedBy)
-                        {{ $logbook->signedBy->name }}<br>
-                        <small>{{ $logbook->signed_at ? \Carbon\Carbon::parse($logbook->signed_at)->format('d/m/Y H:i') : '' }}</small>
-                    @else
-                        <small>Belum ditandatangani</small>
-                    @endif
+            @else
+                <div class="signature-container" style="filter: blur(5px); transition: filter 0.3s ease-in-out; user-select: none; pointer-events: none;">
+                    Jakarta, {{ \Carbon\Carbon::parse($logbook->date)->translatedFormat('d F Y') }}<br>
+                    (Jabatan)<br>
+                    <div style="height: 80px; margin-top: 10px; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; color: #999;">
+                        (Tanda Tangan)
+                    </div>
+                    (Nama TTD)
                 </div>
-            </div>
-        </div>
-
-        <div class="print-info">
-            Dicetak pada: {{ now()->format('d F Y H:i:s') }} | 
-            ID Logbook: {{ $logbook->id }}
+            @endif
         </div>
     </div>
 
-    <!-- Modal Add Content -->
-    <div class="modal fade no-print" id="addContentModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <form method="POST" action="{{ route('logbook.item.store', ['unit_id' => $unit_id, 'logbook_id' => $logbook->id]) }}">
-                    @csrf
-                    <div class="modal-header">
-                        <h5 class="modal-title">Tambah Content Logbook</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="row">
-                            <div class="col-md-12 mb-3">
-                                <label for="judul" class="form-label">Judul Kegiatan <span class="text-danger">*</span></label>
-                                <input type="text" name="judul" id="judul" class="form-control" placeholder="Masukkan judul kegiatan..." required>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-12 mb-3">
-                                <label for="catatan" class="form-label">Catatan Kegiatan <span class="text-danger">*</span></label>
-                                <textarea name="catatan" id="catatan" class="form-control" rows="3" placeholder="Masukkan detail kegiatan..." required></textarea>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="tanggal_kegiatan" class="form-label">Tanggal Kegiatan <span class="text-danger">*</span></label>
-                                <input type="date" name="tanggal_kegiatan" id="tanggal_kegiatan" class="form-control" value="{{ $logbook->date }}" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="tools" class="form-label">Tools/Alat <span class="text-danger">*</span></label>
-                                <select name="tools" id="tools" class="form-select" required>
-                                    <option value="">Pilih Alat</option>
-                                    @foreach(\App\Models\Tool::all() as $tool)
-                                        <option value="{{ $tool->nama }}">{{ $tool->nama }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <label for="teknisi" class="form-label">Teknisi <span class="text-danger">*</span></label>
-                                <select name="teknisi" id="teknisi" class="form-select" required>
-                                    <option value="">Pilih Teknisi</option>
-                                    @foreach(\App\Models\User::where('technician', 1)->get() as $user)
-                                        <option value="{{ $user->id }}">{{ $user->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="mulai" class="form-label">Waktu Mulai <span class="text-danger">*</span></label>
-                                <input type="datetime-local" name="mulai" id="mulai" class="form-control" required>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="selesai" class="form-label">Waktu Selesai <span class="text-danger">*</span></label>
-                                <input type="datetime-local" name="selesai" id="selesai" class="form-control" required>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Simpan Content</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Bootstrap & Scripts -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    
     <script>
-        function deleteItem(itemId) {
-            if (confirm('Apakah Anda yakin ingin menghapus item ini?')) {
-                fetch(`{{ route('logbook.item.destroy', ['unit_id' => $unit_id, 'logbook_id' => $logbook->id, 'item_id' => ':item_id']) }}`.replace(':item_id', itemId), {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Content-Type': 'application/json',
-                    },
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        location.reload();
-                    } else {
-                        alert('Gagal menghapus item');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Terjadi error saat menghapus item');
-                });
-            }
-        }
-
-        // Cek batas maksimal content
-        @if($logbookItems->count() >= 5)
-            document.querySelector('.btn-add-content').style.display = 'none';
-        @endif
+        // No additional functionality needed - this is a read-only view
     </script>
 </body>
 </html>
