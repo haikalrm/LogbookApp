@@ -66,7 +66,6 @@ Route::middleware('auth')->group(function () {
 	Route::post('/positions/delete', [PositionController::class, 'delete'])->name('positions.delete');
 	
 	//Routes for manage Users
-	
 	Route::get('/manage/users', [UserController::class, 'index'])->name('users.index');
 	Route::get('/manage/users/create', [UserController::class, 'create'])->name('users.create');
 	Route::post('/manage/users', [UserController::class, 'store'])->name('users.store');

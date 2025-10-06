@@ -14,34 +14,43 @@ class UserController extends Controller
 {
     public function index()
     {
+        // Check if user has access (Staff = 1 or Admin = 2)
+        if (auth()->user()->access_level < 1) {
+            abort(403, 'Access denied. Only Staff and Admin can manage users.');
+        }
+        
         // Fetch all users with pagination
         $users = User::paginate(10);
-		$positions = Position::all();
-        return view('users.index', compact('users', 'positions'));
+        return view('users.index', compact('users'));
     }
 
     public function store(Request $request)
     {
+        // Check if user has access (Staff = 1 or Admin = 2)
+        if (auth()->user()->access_level < 1) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Access denied. Only Staff and Admin can manage users.'
+            ], 403);
+        }
+        
         try {
-            $validated = $request->validate([
-                'modalAddressFirstName' => 'required|string|max:255',
-                'modalAddressLastName' => 'required|string|max:255',
-                'modalGelar' => 'nullable|string|max:50',
-                'modalUsername' => 'required|alpha_num|unique:users,name|max:255',
-                'modalAddressEmail' => 'required|email|unique:users,email|max:255',
-                'modalAddressCountry' => 'required|string|max:255',
-                'inputGroupSelect01' => 'required|string|max:255',
-                'modalAddressAddress1' => 'required|string|max:255',
-                'modalAddressAddress2' => 'nullable|string|max:255',
-                'modalPhoneNumber' => 'required|string|max:20',
-                'modalAddressCity' => 'required|string|max:255',
-                'modalAddressState' => 'required|string|max:255',
-                'modalAddressZipCode' => 'required|string|max:10',
-                'signature' => 'required|string',
-                'customRadioIcon-01' => 'required|integer|in:0,1,2',
-            ]);
-
-            $user = User::create([
+        $validated = $request->validate([
+            'modalAddressFirstName' => 'required|string|max:255',
+            'modalAddressLastName' => 'required|string|max:255',
+            'modalGelar' => 'nullable|string|max:50',
+            'modalUsername' => 'required|alpha_num|unique:users,name|max:255',
+            'modalAddressEmail' => 'required|email|unique:users,email|max:255',
+            'modalAddressCountry' => 'required|string|max:255',
+            'modalAddressAddress1' => 'required|string|max:255',
+            'modalAddressAddress2' => 'nullable|string|max:255',
+            'modalPhoneNumber' => 'required|string|max:20',
+            'modalAddressCity' => 'required|string|max:255',
+            'modalAddressState' => 'required|string|max:255',
+            'modalAddressZipCode' => 'required|string|max:10',
+            'signature' => 'required|string',
+            'customRadioIcon-01' => 'required|integer|in:0,1,2',
+        ]);            $user = User::create([
                 'name' => strtolower($validated['modalUsername']),
                 'fullname' => $validated['modalAddressFirstName'] . ' ' . $validated['modalAddressLastName'],
                 'gelar' => $validated['modalGelar'] ?? '',
@@ -49,7 +58,6 @@ class UserController extends Controller
                 'password' => Hash::make('defaultpassword'),
                 'access_level' => $validated['customRadioIcon-01'],
                 'profile_picture' => 'default.png',
-                'position' => $validated['inputGroupSelect01'],
                 'technician' => $request->has('technician') ? 1 : 0,
                 'signature' => $validated['signature'],
                 'country' => $validated['modalAddressCountry'],
@@ -101,7 +109,6 @@ class UserController extends Controller
                     'username' => $user->name,
                     'email' => $user->email,
                     'country' => $user->country,
-                    'position' => $user->position,
                     'address1' => $user->address,
                     'address2' => '',
                     'phone_number' => $user->phone_number,
@@ -133,7 +140,6 @@ class UserController extends Controller
                 'editUsername' => 'required|alpha_num|unique:users,name,' . $id . ',id|max:255',
                 'editEmail' => 'required|email|unique:users,email,' . $id . ',id|max:255',
                 'editCountry' => 'required|string|max:255',
-                'editPosition' => 'required|string|max:255',
                 'editAddress1' => 'required|string|max:255',
                 'editAddress2' => 'nullable|string|max:255',
                 'editPhoneNumber' => 'required|string|max:20',
@@ -150,7 +156,6 @@ class UserController extends Controller
                 'gelar' => $validated['editGelar'] ?? '',
                 'email' => $validated['editEmail'],
                 'access_level' => $validated['editRadioIcon-01'],
-                'position' => $validated['editPosition'],
                 'technician' => $request->has('editTechnician') ? 1 : 0,
                 'signature' => $validated['editSignature'],
                 'country' => $validated['editCountry'],

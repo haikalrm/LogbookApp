@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany; // Import class HasMany
+use Illuminate\Database\Eloquent\Relations\BelongsTo; // Import class BelongsTo
 
 class User extends Authenticatable
 {
@@ -35,9 +36,9 @@ class User extends Authenticatable
 
     // METHOD 'username()' SUDAH DIHAPUS UNTUK MEMPERBAIKI ERROR RELATIONSHIP
 
-    public function positions(): HasMany
+    public function position(): BelongsTo
     {
-        return $this->hasMany(Position::class);
+        return $this->belongsTo(Position::class, 'position', 'no');
     }
 
     public function notifications(): HasMany
