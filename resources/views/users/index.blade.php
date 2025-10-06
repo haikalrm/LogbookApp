@@ -83,12 +83,20 @@
                                     @if($user->access_level == 2)
                                         <span class="badge rounded-pill bg-label-success">Admin</span>
                                     @elseif($user->access_level == 1)
-                                        <span class="badge rounded-pill bg-label-warning">Support</span>
+                                        <span class="badge rounded-pill bg-label-warning">Staff</span>
                                     @else
                                         <span class="badge rounded-pill bg-label-secondary">User</span>
                                     @endif
                                 </td>
-                                <td>{{ $user->position }}</td>
+                                <td>
+                                    @if($user->access_level == 2)
+                                        Admin
+                                    @elseif($user->access_level == 1)
+                                        Staff
+                                    @else
+                                        User
+                                    @endif
+                                </td>
                                 <td>
                                     @if($user->signature)
                                         <img src="{{ $user->signature }}" alt="Signature" style="width: 80px; height: 40px; object-fit: contain;" />
@@ -155,7 +163,7 @@
 					  <label class="form-check-label custom-option-content" for="customRadioIcon2">
 						<span class="custom-option-body">
 						  <i class="ri-customer-service-2-line"></i>
-						  <span class="custom-option-title mb-2"> Support </span>
+						  <span class="custom-option-title mb-2"> Staff </span>
 						  <small> This role can create, edit, and approve logbooks. </small>
 						</span>
 						<input name="customRadioIcon-01" class="form-check-input" type="radio" value="1" id="customRadioIcon2">
@@ -263,16 +271,6 @@
 				  class="form-control"
 				  placeholder="user@haikal.engineer" required />
 				<label for="modalAddressEmail">Email</label>
-			  </div>
-			</div>
-			<div class="col-12 col-md-6">
-			  <div class="form-floating form-floating-outline">
-				<select class="form-select" id="inputGroupSelect01" name="inputGroupSelect01">
-					@foreach ($positions as $position)
-						<option value="{{ $position->no }}">{{ $position->name }}</option>
-					@endforeach
-				</select>
-				<label class="input-group-text" for="inputGroupSelect01">Positions</label>
 			  </div>
 			</div>
 			<div class="col-12">
@@ -403,7 +401,7 @@
 										<label class="form-check-label custom-option-content" for="editRadioIcon2">
 											<span class="custom-option-body">
 												<i class="ri-customer-service-2-line"></i>
-												<span class="custom-option-title mb-2"> Support </span>
+												<span class="custom-option-title mb-2"> Staff </span>
 												<small> This role can create, edit, and approve logbooks. </small>
 											</span>
 											<input name="editRadioIcon-01" class="form-check-input" type="radio" value="1" id="editRadioIcon2">
@@ -493,16 +491,6 @@
 							<div class="form-floating form-floating-outline">
 								<input type="text" id="editEmail" name="editEmail" class="form-control" placeholder="user@haikal.engineer" required />
 								<label for="editEmail">Email</label>
-							</div>
-						</div>
-						<div class="col-12 col-md-6">
-							<div class="form-floating form-floating-outline">
-								<select class="form-select" id="editPosition" name="editPosition">
-									@foreach ($positions as $position)
-										<option value="{{ $position->no }}">{{ $position->name }}</option>
-									@endforeach
-								</select>
-								<label class="input-group-text" for="editPosition">Positions</label>
 							</div>
 						</div>
 						<div class="col-12">
@@ -826,7 +814,6 @@ $(document).ready(function() {
 					$('#editUsername').val(user.username);
 					$('#editEmail').val(user.email);
 					$('#editCountry').val(user.country).trigger('change');
-					$('#editPosition').val(user.position).trigger('change');
 					$('#editAddress1').val(user.address1);
 					$('#editAddress2').val(user.address2);
 					$('#editPhoneNumber').val(user.phone_number);
