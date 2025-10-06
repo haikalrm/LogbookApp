@@ -32,7 +32,8 @@
     </a>
   </li>
 
-  <!-- Manage Section -->
+  <!-- Manage Section (Only for Staff and Admin) -->
+  @if(auth()->user()->access_level >= 1)
   <li class="menu-header mt-5">
     <span class="menu-header-text">MANAGE</span>
   </li>
@@ -49,7 +50,7 @@
     </a>
   </li>
 
-  <!-- User Section -->
+  <!-- User Section (Only for Staff and Admin) -->
   <li class="menu-header mt-5">
     <span class="menu-header-text">USER</span>
   </li>
@@ -59,6 +60,7 @@
       <div>Manage Users</div>
     </a>
   </li>
+  @endif
 
   <!-- Logout -->
   <li class="menu-header mt-5">
