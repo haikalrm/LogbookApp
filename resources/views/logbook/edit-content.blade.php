@@ -104,12 +104,6 @@
                         <div class="modal-body">
                             <div class="row">
                                 <div class="col-md-12 mb-3">
-                                    <label for="judul" class="form-label">Judul Kegiatan <span class="text-danger">*</span></label>
-                                    <input type="text" name="judul" id="judul" class="form-control" placeholder="Masukkan judul kegiatan..." required>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-12 mb-3">
                                     <label for="catatan" class="form-label">Catatan Kegiatan <span class="text-danger">*</span></label>
                                     <textarea name="catatan" id="catatan" class="form-control" rows="4" placeholder="Masukkan detail kegiatan..." required></textarea>
                                 </div>
@@ -170,12 +164,6 @@
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-                            <div class="row">
-                                <div class="col-md-12 mb-3">
-                                    <label for="edit_item_judul" class="form-label">Judul Kegiatan <span class="text-danger">*</span></label>
-                                    <input type="text" name="judul" id="edit_item_judul" class="form-control" required>
-                                </div>
-                            </div>
                             <div class="row">
                                 <div class="col-md-12 mb-3">
                                     <label for="edit_item_catatan" class="form-label">Catatan Kegiatan <span class="text-danger">*</span></label>
@@ -259,11 +247,10 @@
                         <thead class="table-light">
                             <tr>
                                 <th width="5%">No</th>
-                                <th width="20%">Judul</th>
-                                <th width="25%">Catatan</th>
-                                <th width="10%">Tools</th>
+                                <th width="35%">Catatan</th>
+                                <th width="15%">Tools</th>
                                 <th width="15%">Teknisi</th>
-                                <th width="15%">Waktu</th>
+                                <th width="20%">Waktu</th>
                                 <th width="10%">Actions</th>
                             </tr>
                         </thead>
@@ -271,7 +258,6 @@
                             @forelse($logbookItems as $index => $item)
                             <tr>
                                 <td>{{ $index + 1 }}</td>
-                                <td>{{ $item->judul }}</td>
                                 <td>{{ Str::limit($item->catatan, 50) }}</td>
                                 <td>{{ $item->tools }}</td>
                                 <td>{{ $item->teknisi_user->name ?? 'N/A' }}</td>
@@ -286,7 +272,6 @@
                                             data-bs-toggle="modal" 
                                             data-bs-target="#edit-content-item-modal"
                                             data-item-id="{{ $item->id }}"
-                                            data-judul="{{ $item->judul }}"
                                             data-catatan="{{ $item->catatan }}"
                                             data-tanggal="{{ $item->tanggal_kegiatan }}"
                                             data-tools="{{ $item->tools }}"
@@ -300,15 +285,14 @@
                                     <button type="button" class="btn btn-sm btn-outline-danger delete-item-btn" 
                                             data-item-id="{{ $item->id }}"
                                             data-unit-id="{{ $unit->id }}"
-                                            data-logbook-id="{{ $logbook->id }}"
-                                            data-judul="{{ $item->judul }}">
+                                            data-logbook-id="{{ $logbook->id }}">
                                         <i class="ri-delete-bin-line"></i>
                                     </button>
                                 </td>
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="7" class="text-center text-muted">Belum ada content item. Klik "Add Content" untuk menambah.</td>
+                                <td colspan="6" class="text-center text-muted">Belum ada content item. Klik "Add Content" untuk menambah.</td>
                             </tr>
                             @endforelse
                         </tbody>
@@ -396,7 +380,6 @@ $(document).ready(function() {
     $(document).on('click', '.edit-item-btn', function() {
         const btn = $(this);
         
-        $('#edit_item_judul').val(btn.data('judul'));
         $('#edit_item_catatan').val(btn.data('catatan'));
         $('#edit_item_tanggal_kegiatan').val(btn.data('tanggal'));
         $('#edit_item_tools').val(btn.data('tools'));
@@ -470,10 +453,9 @@ $(document).ready(function() {
         const itemId = btn.data('item-id');
         const unitId = btn.data('unit-id');
         const logbookId = btn.data('logbook-id');
-        const judul = btn.data('judul');
         
         // Konfirmasi sebelum menghapus
-        if (!confirm(`Apakah Anda yakin ingin menghapus item "${judul}"?\n\nTindakan ini tidak dapat dibatalkan.`)) {
+        if (!confirm(`Apakah Anda yakin ingin menghapus item ini?\n\nTindakan ini tidak dapat dibatalkan.`)) {
             return;
         }
         
