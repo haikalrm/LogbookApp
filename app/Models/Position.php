@@ -9,11 +9,10 @@ class Position extends Model
 {
     use HasFactory;
 
-    protected $table = 'positions';       // Nama tabel
-    protected $primaryKey = 'no';         // Primary key
-    public $incrementing = true;          // Auto increment aktif
-    protected $keyType = 'int';           // PK tipe integer
-    public $timestamps = true;            // Aktifkan timestamps (ada created_at/updated_at di migration)
-    
-    protected $fillable = ['name'];       // Kolom yang bisa diisi
+    protected $table = 'positions';
+    protected $primaryKey = 'no';
+    public $incrementing = true;
+    protected $keyType = 'int';
+    public $timestamps = true;
+    protected $fillable = ['name'];
 }

@@ -7,7 +7,6 @@
             <span class="text-muted fw-light">Logbook /</span> Edit Content
         </h4>
 
-        <!-- Modal Edit Logbook Header -->
         <div class="modal fade" id="edit-logbook-modal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered" role="document">
                 <div class="modal-content">
@@ -89,7 +88,6 @@
             </div>
         </div>
 
-        <!-- Modal Add Content -->
         <div class="modal fade" id="add-content-modal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
                 <div class="modal-content">
@@ -152,7 +150,6 @@
             </div>
         </div>
 
-        <!-- Modal Edit Content Item -->
         <div class="modal fade" id="edit-content-item-modal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
                 <div class="modal-content">
@@ -214,7 +211,6 @@
             </div>
         </div>
 
-        <!-- Main Content -->
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <div>
@@ -232,13 +228,13 @@
             </div>
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="mb-0">Content Items ({{ $logbookItems->count() }}/5)</h6>
-                    @if($logbookItems->count() < 5)
+                    <h6 class="mb-0">Content Items ({{ $logbookItems->count() }}/10)</h6>
+                    @if($logbookItems->count() < 10)
                         <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#add-content-modal">
                             <i class="ri-add-line me-1"></i>Add Content
                         </button>
                     @else
-                        <span class="text-muted">Maksimal 5 content telah tercapai</span>
+                        <span class="text-muted">Maksimal 10 content telah tercapai</span>
                     @endif
                 </div>
 
@@ -305,16 +301,12 @@
 @endsection
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 $(document).ready(function() {
-    // Handle form submission with validation and auto-reload
     $('#add-content-form').on('submit', function(e) {
         e.preventDefault();
         
-        console.log('Form submitted');
-        console.log('Form data:', $(this).serialize());
-        
-        // Validasi waktu
         var mulai = $('#mulai').val();
         var selesai = $('#selesai').val();
         
@@ -323,7 +315,7 @@ $(document).ready(function() {
             var waktuSelesai = new Date(selesai);
             
             if (waktuSelesai <= waktuMulai) {
-                alert('Waktu selesai harus lebih besar dari waktu mulai!');
+                sessionStorage.setItem('errorMessage', 'Waktu selesai harus lebih besar dari waktu mulai!');
                 return false;
             }
         }
@@ -331,7 +323,6 @@ $(document).ready(function() {
         const form = $(this);
         const submitBtn = form.find('button[type="submit"]');
         
-        // Disable submit button to prevent double submission
         submitBtn.prop('disabled', true).text('Menyimpan...');
         
         $.ajax({
@@ -339,26 +330,17 @@ $(document).ready(function() {
             method: 'POST',
             data: form.serialize(),
             success: function(response) {
-                // Close modal
                 $('#add-content-modal').modal('hide');
-                
-                // Reset form
                 form[0].reset();
-                
-                // Show success message
-                alert('Content berhasil ditambahkan!');
-                
-                // Reload page to show new content
+                sessionStorage.setItem('successMessage', "Content berhasil ditambahkan!");
                 location.reload();
             },
             error: function(xhr, status, error) {
                 console.error('Error:', error);
-                console.error('Response:', xhr.responseText);
                 
                 let errorMessage = 'Terjadi kesalahan saat menyimpan data.';
                 
                 if (xhr.responseJSON && xhr.responseJSON.errors) {
-                    // Handle Laravel validation errors
                     const errors = xhr.responseJSON.errors;
                     const errorList = Object.values(errors).flat();
                     errorMessage = errorList.join('\n');
@@ -366,9 +348,7 @@ $(document).ready(function() {
                     errorMessage = xhr.responseJSON.message;
                 }
                 
-                alert(errorMessage);
-                
-                // Re-enable submit button
+                sessionStorage.setItem('errorMessage', errorMessage);
                 submitBtn.prop('disabled', false).text('Simpan');
             }
         });
@@ -376,7 +356,6 @@ $(document).ready(function() {
         return false;
     });
 
-    // Handle Edit Item Modal - populate data when edit button clicked
     $(document).on('click', '.edit-item-btn', function() {
         const btn = $(this);
         
@@ -387,7 +366,6 @@ $(document).ready(function() {
         $('#edit_item_mulai').val(btn.data('mulai'));
         $('#edit_item_selesai').val(btn.data('selesai'));
         
-        // Set the form action URL
         const unitId = btn.data('unit-id');
         const logbookId = btn.data('logbook-id');
         const itemId = btn.data('item-id');
@@ -395,11 +373,9 @@ $(document).ready(function() {
         $('#edit-content-item-form').attr('action', actionUrl);
     });
     
-    // Handle edit form submission
     $('#edit-content-item-form').on('submit', function(e) {
         e.preventDefault();
         
-        // Time validation for edit form
         var mulai = $('#edit_item_mulai').val();
         var selesai = $('#edit_item_selesai').val();
         
@@ -408,7 +384,7 @@ $(document).ready(function() {
             var waktuSelesai = new Date(selesai);
             
             if (waktuSelesai <= waktuMulai) {
-                alert('Waktu selesai harus lebih besar dari waktu mulai!');
+                sessionStorage.setItem('errorMessage', 'Waktu selesai harus lebih besar dari waktu mulai!');
                 return false;
             }
         }
@@ -424,7 +400,7 @@ $(document).ready(function() {
             data: form.serialize(),
             success: function(response) {
                 $('#edit-content-item-modal').modal('hide');
-                alert('Content berhasil diupdate!');
+                sessionStorage.setItem('successMessage', 'Content berhasil diupdate!');
                 location.reload();
             },
             error: function(xhr, status, error) {
@@ -439,7 +415,7 @@ $(document).ready(function() {
                     errorMessage = xhr.responseJSON.message;
                 }
                 
-                alert(errorMessage);
+                sessionStorage.setItem('errorMessage', errorMessage);
                 submitBtn.prop('disabled', false).text('Save Changes');
             }
         });
@@ -447,56 +423,62 @@ $(document).ready(function() {
         return false;
     });
     
-    // Handle Delete Item
     $(document).on('click', '.delete-item-btn', function() {
         const btn = $(this);
         const itemId = btn.data('item-id');
         const unitId = btn.data('unit-id');
         const logbookId = btn.data('logbook-id');
         
-        // Konfirmasi sebelum menghapus
-        if (!confirm(`Apakah Anda yakin ingin menghapus item ini?\n\nTindakan ini tidak dapat dibatalkan.`)) {
-            return;
-        }
-        
-        // Disable button sementara dan ubah icon
-        btn.prop('disabled', true);
-        const originalHtml = btn.html();
-        btn.html('<i class="ri-loader-4-line ri-spin"></i>');
-        
-        // AJAX request untuk delete
-        $.ajax({
-            url: `/logbook/${unitId}/dashboard/${logbookId}/item/${itemId}`,
-            method: 'DELETE',
-            data: {
-                _token: $('input[name="_token"]').first().val()
+        Swal.fire({
+            title: 'Apakah Anda yakin?',
+            text: "Item logbook ini akan dihapus permanen!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Hapus!',
+            cancelButtonText: 'Batal',
+            customClass: {
+                confirmButton: 'btn btn-danger me-3',
+                cancelButton: 'btn btn-label-secondary'
             },
-            success: function(response) {
-                if (response.success) {
-                    alert(response.message || 'Item logbook berhasil dihapus!');
-                    location.reload();
-                } else {
-                    alert(response.message || 'Terjadi kesalahan saat menghapus data.');
-                    btn.prop('disabled', false).html(originalHtml);
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('Delete Error:', error);
-                console.error('Response:', xhr.responseText);
-                
-                let errorMessage = 'Terjadi kesalahan saat menghapus data.';
-                if (xhr.responseJSON && xhr.responseJSON.message) {
-                    errorMessage = xhr.responseJSON.message;
-                } else if (xhr.status === 404) {
-                    errorMessage = 'Item tidak ditemukan.';
-                } else if (xhr.status === 403) {
-                    errorMessage = 'Anda tidak memiliki izin untuk menghapus item ini.';
-                }
-                
-                alert(errorMessage);
-                
-                // Re-enable button
-                btn.prop('disabled', false).html(originalHtml);
+            buttonsStyling: false
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const originalHtml = btn.html();
+                btn.prop('disabled', true).html('<i class="ri-loader-4-line ri-spin"></i>');
+
+                $.ajax({
+                    url: `/logbook/${unitId}/dashboard/${logbookId}/item/${itemId}`,
+                    method: 'DELETE',
+                    data: {
+                        _token: $('input[name="_token"]').first().val()
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            const msg = response.message || 'Item logbook berhasil dihapus!';
+                            sessionStorage.setItem('successMessage', msg);
+                            location.reload();
+                        } else {
+                            const msg = response.message || 'Terjadi kesalahan saat menghapus data.';
+                            sessionStorage.setItem('errorMessage', msg);
+                            btn.prop('disabled', false).html(originalHtml);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Delete Error:', error);
+                        
+                        let errorMessage = 'Terjadi kesalahan saat menghapus data.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        } else if (xhr.status === 404) {
+                            errorMessage = 'Item tidak ditemukan.';
+                        } else if (xhr.status === 403) {
+                            errorMessage = 'Anda tidak memiliki izin untuk menghapus item ini.';
+                        }
+                        
+                        sessionStorage.setItem('errorMessage', errorMessage);
+                        btn.prop('disabled', false).html(originalHtml);
+                    }
+                });
             }
         });
     });

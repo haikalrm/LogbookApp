@@ -3,992 +3,515 @@
 @section('title', 'Manage Users')
 
 @section('content')
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-	<style>
-        .signature-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-       						<div class="col-md-6 col-sm-12">
-							<div class="form-floating form-floating-outline">
-								<input type="text" id="editFirstName" name="editFirstName" class="form-control" placeholder="John" required />
-								<label for="editFirstName">First Name</label>
-							</div>
-						</div>
-						<div class="col-md-6 col-sm-12">
-							<div class="form-floating form-floating-outline">
-								<input type="text" id="editLastName" name="editLastName" class="form-control" placeholder="Doe" required />
-								<label for="editLastName">Last Name</label>
-							</div>
-						</div>signature-pad {
-            border: 2px solid #000;
-            background-color: #fff;
-        }
-    </style>
-    <div class="container-xxl flex-grow-1 container-p-y">
-        <div class="card">
-            <div class="card-header border-bottom">
-                <h5 class="card-title mb-0">Manage Users</h5>
-            </div>
-            <div class="card-datatable table-responsive">
-                <table id="users_list" class="datatables-users table">
-                    <thead>
-                        <tr>
-							<th></th>
-                            <th class="control sorting_disabled" rowspan="1" colspan="1" style="width: 0px;"></th>
-                            <th class="sorting sorting_desc" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" style="width: 30px;" aria-sort="descending">
-                                ID
-                            </th>
-                            <th class="sorting" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" style="width: 136px;">
-                                Username
-                            </th>
-                            <th class="sorting" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" style="width: 136px;">
-                                Full Name
-                            </th>
-                            <th class="sorting" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" style="width: 90px;">
-                                Email
-                            </th>
-                            <th class="sorting" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" style="width: 150px;">
-                                Address
-                            </th>
-                            <th class="sorting" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" style="width: 95px;">
-                                Role
-                            </th>
-                            <th class="sorting" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" style="width: 86px;">
-                                Position
-                            </th>
-                            <th class="sorting" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" style="width: 86px;">
-                                Signature
-                            </th>
-                            <th class="sorting_disabled" rowspan="1" colspan="1" style="width: 147px;">
-                                Actions
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($users as $user)
-                            <tr>
-                                <td></td>
-								<td></td>
-                                <td>{{ $user->id }}</td>
-                                <td>{{ $user->name }}</td>
-                                <td>{{ $user->fullname }}</td>
-                                <td>{{ $user->email }}</td>
-                                <td>{{ $user->address }}</td>
-                                <td>
-                                    @if($user->access_level == 2)
-                                        <span class="badge rounded-pill bg-label-success">Admin</span>
-                                    @elseif($user->access_level == 1)
-                                        <span class="badge rounded-pill bg-label-warning">Staff</span>
-                                    @else
-                                        <span class="badge rounded-pill bg-label-secondary">User</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    @if($user->access_level == 2)
-                                        Admin
-                                    @elseif($user->access_level == 1)
-                                        Staff
-                                    @else
-                                        User
-                                    @endif
-                                </td>
-                                <td>
-                                    @if($user->signature)
-                                        <img src="{{ $user->signature }}" alt="Signature" style="width: 80px; height: 40px; object-fit: contain;" />
-                                    @else
-                                        <span class="text-muted">No signature</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    <div class="d-flex align-items-center gap-50">
-                                        <a href="/profile/{{ $user->name }}" class="btn btn-sm btn-icon btn-text-secondary rounded-pill waves-effect">
-                                            <i class="ri-eye-line ri-20px"></i>
+<meta name="csrf-token" content="{{ csrf_token() }}">
+
+<style>
+    /* --- FIX UTAMA: AGAR SWEETALERT MUNCUL DI ATAS MODAL --- */
+    .swal2-container { z-index: 9999 !important; }
+
+    /* FIX DATATABLES MODAL */
+    .dtr-bs-modal .modal-body { padding: 0 !important; }
+    .dtr-details { width: 100%; border-collapse: collapse; }
+    .dtr-details tr { border-bottom: 1px solid #eceef1; }
+    .dtr-details tr:last-child { border-bottom: none; }
+    .dtr-details td { padding: 12px 24px; vertical-align: middle; }
+    .dtr-details .dtr-title { font-weight: 600; color: #566a7f; width: 35%; padding-right: 16px; font-size: 0.9rem; background-color: #fcfdfd; }
+    .dtr-details .dtr-data { color: #697a8d; font-weight: 400; }
+    .dtr-details .dtr-data img { max-width: 80px; height: auto; border: 1px solid #d9dee3; padding: 4px; border-radius: 6px; background: #fff; }
+    .dtr-details .dtr-data .badge { font-size: 0.75rem; }
+
+    /* SIGNATURE PAD */
+    .signature-container { display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #fdfdfd; padding: 10px; border-radius: 8px; }
+    canvas#signature-pad, canvas#edit-signature-pad { border: 2px dashed #d9dee3; border-radius: 8px; background-color: #fff; cursor: crosshair; box-shadow: 0 2px 6px rgba(0,0,0,0.05); touch-action: none; }
+    canvas#signature-pad:hover, canvas#edit-signature-pad:hover { border-color: #696cff; }
+</style>
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="card">
+        <div class="card-datatable table-responsive text-nowrap">
+            <table id="users_list" class="datatables-users table table-hover w-100">
+                <thead>
+                    <tr>
+                        <th style="width: 10px;"></th>
+                        <th style="width: 30px;">ID</th>
+                        <th>Username</th>
+                        <th>Full Name</th>
+                        <th>Email</th>
+                        <th>Address</th>
+                        <th>Role</th>
+                        <th>Position</th>
+                        <th>Signature</th>
+                        <th style="width: 80px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($users as $user)
+                    <tr>
+                        <td></td>
+                        <td>{{ $user->id }}</td>
+                        <td><span class="fw-medium">{{ $user->name }}</span></td>
+                        <td>{{ $user->fullname }}</td>
+                        <td>{{ $user->email }}</td>
+                        <td title="{{ $user->address }}">{{ Str::limit($user->address, 20) }}</td>
+                        <td>
+                            @if($user->access_level == 2) <span class="badge rounded-pill bg-label-success">Admin</span>
+                            @elseif($user->access_level == 1) <span class="badge rounded-pill bg-label-warning">Staff</span>
+                            @else <span class="badge rounded-pill bg-label-secondary">User</span>
+                            @endif
+                        </td>
+                        <td>{{ $user->position_relation->name ?? 'N/A' }}</td> <td>
+                            @if($user->signature)
+                                @php
+                                    $sigSrc = str_starts_with($user->signature, 'data:image') ? $user->signature : asset($user->signature);
+                                @endphp
+                                <img src="{{ $sigSrc }}" alt="Sig" style="width: 60px; height: 30px; object-fit: contain; border: 1px solid #eee; background: #fff; padding: 2px; border-radius: 4px;" />
+                            @else
+                                <span class="text-muted small">-</span>
+                            @endif
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <a href="/profile/{{ $user->name }}" class="btn btn-sm btn-icon btn-text-secondary rounded-pill waves-effect" title="View Profile">
+                                    <i class="ri-eye-line ri-20px"></i>
+                                </a>
+                                <div class="dropdown">
+                                    <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
+                                        <i class="ri-more-2-line"></i>
+                                    </button>
+                                    <div class="dropdown-menu">
+                                        <a class="dropdown-item waves-effect edit-record" href="javascript:;" data-id="{{ $user->id }}">
+                                            <i class="ri-edit-box-line me-2"></i><span>Edit</span>
                                         </a>
-                                        <div class="dropdown">
-                                            <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
-                                                <i class="ri-more-2-line"></i>
-                                            </button>
-                                            <div class="dropdown-menu">
-												<a class="dropdown-item waves-effect edit-record" href="javascript:;" data-id="{{ $user->id }}">
-                                                    <i class="ri-edit-box-line me-2"></i><span>Edit</span>
-                                                </a>
-                                                <a class="dropdown-item waves-effect delete-record" href="javascript:;" data-id="{{ $user->id }}">
-                                                    <i class="ri-delete-bin-7-line me-2"></i><span>Delete</span>
-                                                </a>
-                                            </div>
-                                        </div>
+                                        <a class="dropdown-item waves-effect delete-record text-danger" href="javascript:;" data-id="{{ $user->id }}">
+                                            <i class="ri-delete-bin-7-line me-2"></i><span>Delete</span>
+                                        </a>
                                     </div>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addNewUser" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-simple modal-add-new-address">
+        <div class="modal-content">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-body p-0">
+                <div class="text-center mb-6">
+                    <h4 class="address-title mb-2">Add New User</h4>
+                    <p class="address-subtitle">Add new user for new account</p>
+                </div>
+                <form id="addNewUserForm" class="row g-5">
+                    @csrf
+                    <div class="col-12">
+                        <div class="row g-5">
+                            <div class="col-md mb-md-0 mb-5">
+                                <div class="form-check custom-option custom-option-icon checked">
+                                    <label class="form-check-label custom-option-content" for="customRadioIcon1">
+                                        <span class="custom-option-body"><i class="ri-user-line"></i><span class="custom-option-title mb-2">User</span><small> Create & edit own logbook. </small></span>
+                                        <input name="customRadioIcon-01" class="form-check-input" type="radio" value="0" id="customRadioIcon1" checked>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md mb-md-0 mb-5">
+                                <div class="form-check custom-option custom-option-icon">
+                                    <label class="form-check-label custom-option-content" for="customRadioIcon2">
+                                        <span class="custom-option-body"><i class="ri-customer-service-2-line"></i><span class="custom-option-title mb-2"> Staff </span><small> Create, edit & approve. </small></span>
+                                        <input name="customRadioIcon-01" class="form-check-input" type="radio" value="1" id="customRadioIcon2">
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md">
+                                <div class="form-check custom-option custom-option-icon">
+                                    <label class="form-check-label custom-option-content" for="customRadioIcon3">
+                                        <span class="custom-option-body"><i class="ri-admin-line"></i><span class="custom-option-title mb-2"> Admin </span><small> Full Access. </small></span>
+                                        <input name="customRadioIcon-01" class="form-check-input" type="radio" value="2" id="customRadioIcon3">
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-12 col-md-6"><div class="form-floating form-floating-outline"><input type="text" id="modalAddressFirstName" name="modalAddressFirstName" class="form-control" placeholder="John" required /><label>First Name</label></div></div>
+                    <div class="col-12 col-md-6"><div class="form-floating form-floating-outline"><input type="text" id="modalAddressLastName" name="modalAddressLastName" class="form-control" placeholder="Doe" required /><label>Last Name</label></div></div>
+                    <div class="col-12 col-md-6"><div class="form-floating form-floating-outline"><input type="text" id="modalUsername" name="modalUsername" class="form-control" placeholder="LunarEcho" required /><label>Username</label></div></div>
+                    <div class="col-12 col-md-6"><div class="form-floating form-floating-outline"><input type="text" id="modalGelar" name="modalGelar" class="form-control" placeholder="S.Kom." /><label>Title</label></div></div>
+                    
+                    <div class="col-12">
+                        <div class="form-floating form-floating-outline">
+                            <select id="modalPosition" name="position" class="select2 form-select" required>
+                                <option value="" selected disabled>Select Position</option>
+                                @foreach($positions as $position)
+                                    <option value="{{ $position->no }}">{{ $position->name }}</option>
+                                @endforeach
+                            </select>
+                            <label>Position</label>
+                        </div>
+                    </div>
+
+                    <div class="col-12"><div class="form-floating form-floating-outline"><select id="modalAddressCountry" name="modalAddressCountry" class="select2 form-select"><option value="Indonesia" selected>Indonesia</option><option value="United States">United States</option></select><label>Country</label></div></div>
+                    <div class="col-12 col-md-6"><div class="form-floating form-floating-outline"><input type="email" id="modalAddressEmail" name="modalAddressEmail" class="form-control" placeholder="user@example.com" required /><label>Email</label></div></div>
+                    <div class="col-12 col-md-6"><div class="form-floating form-floating-outline"><input type="text" id="modalPhoneNumber" name="modalPhoneNumber" class="form-control" placeholder="+62" required /><label>Phone Number</label></div></div>
+                    <div class="col-12"><div class="form-floating form-floating-outline"><input type="text" id="modalAddressAddress1" name="modalAddressAddress1" class="form-control" placeholder="Street Address" required /><label>Address Line 1</label></div></div>
+                    <div class="col-12"><div class="form-floating form-floating-outline"><input type="text" id="modalAddressAddress2" name="modalAddressAddress2" class="form-control" placeholder="Apartment" /><label>Address Line 2</label></div></div>
+                    <div class="col-12 col-md-6"><div class="form-floating form-floating-outline"><input type="text" id="modalAddressCity" name="modalAddressCity" class="form-control" placeholder="Jakarta" required /><label>City</label></div></div>
+                    <div class="col-12 col-md-6"><div class="form-floating form-floating-outline"><input type="text" id="modalAddressState" name="modalAddressState" class="form-control" placeholder="DKI Jakarta" required /><label>State</label></div></div>
+                    <div class="col-12 col-md-6"><div class="form-floating form-floating-outline"><input type="text" id="modalAddressZipCode" name="modalAddressZipCode" class="form-control" placeholder="10110" required /><label>Zip Code</label></div></div>
+                    <div class="col-12 mt-4"><div class="form-check form-switch"><input type="checkbox" class="form-check-input" id="technician" name="technician" /><label>Is this user a technician?</label></div></div>
+                    
+                    <div class="col-12">
+                        <label class="form-label fw-medium mb-2">Signature Option</label>
+                        <div class="btn-group w-100 mb-3" role="group">
+                            <input type="radio" class="btn-check" name="sigOption" id="sigDraw" autocomplete="off" checked onchange="toggleSigMethod('draw', 'add')">
+                            <label class="btn btn-outline-primary" for="sigDraw"><i class="ri-pencil-line me-1"></i> Draw</label>
+
+                            <input type="radio" class="btn-check" name="sigOption" id="sigUpload" autocomplete="off" onchange="toggleSigMethod('upload', 'add')">
+                            <label class="btn btn-outline-primary" for="sigUpload"><i class="ri-upload-cloud-line me-1"></i> Upload Image</label>
+                        </div>
+
+                        <div id="section-draw-add" class="signature-container text-center">
+                            <canvas id="signature-pad" width="400" height="200"></canvas>
+                            <div class="mt-2">
+                                <button id="clear-button" class="btn btn-sm btn-outline-danger waves-effect"><i class="ri-eraser-line me-1"></i> Clear</button>
+                            </div>
+                        </div>
+
+                        <div id="section-upload-add" class="d-none">
+                            <div class="form-floating form-floating-outline">
+                                <input type="file" id="signatureFile" class="form-control" accept="image/png, image/jpeg, image/jpg" />
+                                <label for="signatureFile">Choose Image File</label>
+                            </div>
+                            <small class="text-muted">Max size: 2MB. Format: PNG, JPG.</small>
+                        </div>
+                    </div>
+                    <input type="hidden" id="signature" name="signature">
+                    
+                    <div class="col-12 mt-6 d-flex flex-wrap justify-content-center gap-4">
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Modal to add new user -->
-	<div class="modal fade" id="addNewUser" tabindex="-1" aria-hidden="true">
-	 <div class="modal-dialog modal-lg modal-simple modal-add-new-address">
-	  <div class="modal-content">
-		<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-		<div class="modal-body p-0">
-		  <div class="text-center mb-6">
-			<h4 class="address-title mb-2">Add New User</h4>
-			<p class="address-subtitle">Add new user for new account</p>
-		  </div>
-		  <form id="addNewUserForm" class="row g-5">
-			@csrf
-			<div class="col-12">
-			  <div class="row g-5">
-				  <div class="col-md mb-md-0 mb-5">
-					<div class="form-check custom-option custom-option-icon checked">
-					  <label class="form-check-label custom-option-content" for="customRadioIcon1">
-						<span class="custom-option-body">
-						  <i class="ri-user-line"></i>
-						  <span class="custom-option-title mb-2">User</span>
-						  <small> This role can create and edit its own logbook. </small>
-						</span>
-						<input name="customRadioIcon-01" class="form-check-input" type="radio" value="0" id="customRadioIcon1" checked="">
-					  </label>
-					</div>
-				  </div>
-				  <div class="col-md mb-md-0 mb-5">
-					<div class="form-check custom-option custom-option-icon">
-					  <label class="form-check-label custom-option-content" for="customRadioIcon2">
-						<span class="custom-option-body">
-						  <i class="ri-customer-service-2-line"></i>
-						  <span class="custom-option-title mb-2"> Staff </span>
-						  <small> This role can create, edit, and approve logbooks. </small>
-						</span>
-						<input name="customRadioIcon-01" class="form-check-input" type="radio" value="1" id="customRadioIcon2">
-					  </label>
-					</div>
-				  </div>
-				  <div class="col-md">
-					<div class="form-check custom-option custom-option-icon">
-					  <label class="form-check-label custom-option-content" for="customRadioIcon3">
-						<span class="custom-option-body">
-						  <i class="ri-admin-line"></i>
-						  <span class="custom-option-title mb-2"> Admin </span>
-						  <small> This role can manage logbooks, tools, users, etc. </small>
-						</span>
-						<input name="customRadioIcon-01" class="form-check-input" type="radio" value="2" id="customRadioIcon3">
-					  </label>
-					</div>
-				  </div>
-				</div>
-			</div>
-			<div class="col-12 col-md-6">
-			  <div class="form-floating form-floating-outline">
-				<input
-				  type="text"
-				  id="modalAddressFirstName"
-				  name="modalAddressFirstName"
-				  class="form-control"
-				  placeholder="John" required />
-				<label for="modalAddressFirstName">First Name</label>
-			  </div>
-			</div>
-			<div class="col-12 col-md-6">
-			  <div class="form-floating form-floating-outline">
-				<input
-				  type="text"
-				  id="modalAddressLastName"
-				  name="modalAddressLastName"
-				  class="form-control"
-				  placeholder="Doe" required />
-				<label for="modalAddressLastName">Last Name</label>
-			  </div>
-			</div>
-			<div class="col-12 col-md-6">
-			  <div class="form-floating form-floating-outline">
-				<input
-				  type="text"
-				  id="modalUsername"
-				  name="modalUsername"
-				  class="form-control"
-				  placeholder="LunarEcho" required />
-				<label for="modalUsername">Username</label>
-			  </div>
-			</div>
-			<div class="col-12 col-md-6">
-			  <div class="form-floating form-floating-outline">
-				<input
-				  type="text"
-				  id="modalGelar"
-				  name="modalGelar"
-				  class="form-control"
-				  placeholder="S.Kom." />
-				<label for="modalGelar">Title</label>
-			  </div>
-			</div>
-			<div class="col-12">
-			  <div class="form-floating form-floating-outline">
-				<select
-				  id="modalAddressCountry"
-				  name="modalAddressCountry"
-				  class="select2 form-select"
-				  data-allow-clear="true">
-				  <option value="Australia">Australia</option>
-				  <option value="Bangladesh">Bangladesh</option>
-				  <option value="Belarus">Belarus</option>
-				  <option value="Brazil">Brazil</option>
-				  <option value="Canada">Canada</option>
-				  <option value="China">China</option>
-				  <option value="France">France</option>
-				  <option value="Germany">Germany</option>
-				  <option value="India">India</option>
-				  <option value="Indonesia" selected>Indonesia</option>
-				  <option value="Italy">Italy</option>
-				  <option value="Japan">Japan</option>
-				  <option value="Korea">Korea, Republic of</option>
-				  <option value="Mexico">Mexico</option>
-				  <option value="Philippines">Philippines</option>
-				  <option value="Russia">Russian Federation</option>
-				  <option value="South Africa">South Africa</option>
-				  <option value="Thailand">Thailand</option>
-				  <option value="Turkey">Turkey</option>
-				  <option value="Ukraine">Ukraine</option>
-				  <option value="United Arab Emirates">United Arab Emirates</option>
-				  <option value="United Kingdom">United Kingdom</option>
-				  <option value="United States">United States</option>
-				</select>
-				<label for="modalAddressCountry">Country</label>
-			  </div>
-			</div>
-			<div class="col-12 col-md-6">
-			  <div class="form-floating form-floating-outline">
-				<input
-				  type="text"
-				  id="modalAddressEmail"
-				  name="modalAddressEmail"
-				  class="form-control"
-				  placeholder="user@haikal.engineer" required />
-				<label for="modalAddressEmail">Email</label>
-			  </div>
-			</div>
-			<div class="col-12">
-			  <div class="form-floating form-floating-outline">
-				<input
-				  type="text"
-				  id="modalAddressAddress1"
-				  name="modalAddressAddress1"
-				  class="form-control"
-				  placeholder="Merdeka Square" required />
-				<label for="modalAddressAddress1">Address Line 1</label>
-			  </div>
-			</div>
-			<div class="col-12">
-			  <div class="form-floating form-floating-outline">
-				<input
-				  type="text"
-				  id="modalAddressAddress2"
-				  name="modalAddressAddress2"
-				  class="form-control"
-				  placeholder="Monas Street Square" />
-				<label for="modalAddressAddress2">Address Line 2</label>
-			  </div>
-			</div>
-			<div class="col-12 col-md-6">
-			  <div class="form-floating form-floating-outline">
-				<input
-				  type="text"
-				  id="modalPhoneNumber"
-				  name="modalPhoneNumber"
-				  class="form-control"
-				  placeholder="+62" required />
-				<label for="modalPhoneNumber">Phone Number</label>
-			  </div>
-			</div>
-			<div class="col-12 col-md-6">
-			  <div class="form-floating form-floating-outline">
-				<input
-				  type="text"
-				  id="modalAddressCity"
-				  name="modalAddressCity"
-				  class="form-control"
-				  placeholder="Jakarta" required />
-				<label for="modalAddressCity">City</label>
-			  </div>
-			</div>
-			<div class="col-12 col-md-6">
-			  <div class="form-floating form-floating-outline">
-				<input
-				  type="text"
-				  id="modalAddressState"
-				  name="modalAddressState"
-				  class="form-control"
-				  placeholder="Central Jakarta City" required />
-				<label for="modalAddressLandmark">State</label>
-			  </div>
-			</div>
-			<div class="col-12 col-md-6">
-			  <div class="form-floating form-floating-outline">
-				<input
-				  type="text"
-				  id="modalAddressZipCode"
-				  name="modalAddressZipCode"
-				  class="form-control"
-				  placeholder="10110" required />
-				<label for="modalAddressZipCode">Zip Code</label>
-			  </div>
-			</div>
-			<div class="col-12 mt-6">
-			  <div class="form-check form-switch">
-				<input type="checkbox" class="form-check-input" id="technician" name="technician" />
-				<label for="technician">Is this user a technician?</label>
-			  </div>
-			</div>
-			<div class="col-12">
-				<small class="text-light fw-medium">Signature</small>
-				<div class="signature-container">
-					<canvas id="signature-pad"></canvas>
-					<br>
-					<button id="clear-button" class="btn btn-text-warning waves-effect waves-light">Reset</button>
-				</div>
-			</div>
-			<input type="hidden" id="signature" name="signature">
-			<div class="col-12 mt-6 d-flex flex-wrap justify-content-center gap-4 row-gap-4">
-			  <button type="submit" class="btn btn-primary">Submit</button>
-			  <button
-				type="reset"
-				class="btn btn-outline-secondary"
-				data-bs-dismiss="modal"
-				aria-label="Close">
-				Cancel
-			  </button>
-			</div>
-		  </form>
-		</div>
-	  </div>
-	</div>
-   </div>
-   <!-- Modal to edit user -->
-	<div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
-		<div class="modal-dialog modal-lg modal-simple modal-add-new-address">
-			<div class="modal-content">
-				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-				<div class="modal-body p-0">
-					<div class="text-center mb-6">
-						<h4 class="address-title mb-2">Edit User</h4>
-						<p class="address-subtitle">Edit user details</p>
-					</div>
-					<form id="editUserForm" class="row g-5">
-						@method('PUT')
-						@csrf
-						<div class="col-12">
-							<div class="row g-5">
-								<div class="col-md mb-md-0 mb-5">
-									<div class="form-check custom-option custom-option-icon">
-										<label class="form-check-label custom-option-content" for="editRadioIcon1">
-											<span class="custom-option-body">
-												<i class="ri-user-line"></i>
-												<span class="custom-option-title mb-2">User</span>
-												<small> This role can create and edit its own logbook. </small>
-											</span>
-											<input name="editRadioIcon-01" class="form-check-input" type="radio" value="0" id="editRadioIcon1">
-										</label>
-									</div>
-								</div>
-								<div class="col-md mb-md-0 mb-5">
-									<div class="form-check custom-option custom-option-icon">
-										<label class="form-check-label custom-option-content" for="editRadioIcon2">
-											<span class="custom-option-body">
-												<i class="ri-customer-service-2-line"></i>
-												<span class="custom-option-title mb-2"> Staff </span>
-												<small> This role can create, edit, and approve logbooks. </small>
-											</span>
-											<input name="editRadioIcon-01" class="form-check-input" type="radio" value="1" id="editRadioIcon2">
-										</label>
-									</div>
-								</div>
-								<div class="col-md">
-									<div class="form-check custom-option custom-option-icon">
-										<label class="form-check-label custom-option-content" for="editRadioIcon3">
-											<span class="custom-option-body">
-												<i class="ri-admin-line"></i>
-												<span class="custom-option-title mb-2"> Admin </span>
-												<small> This role can manage logbooks, tools, users, etc. </small>
-											</span>
-											<input name="editRadioIcon-01" class="form-check-input" type="radio" value="2" id="editRadioIcon3">
-										</label>
-									</div>
-								</div>
-							</div>
-						</div>
-						<input type="hidden" id="editUserId" name="user_id">
-						<div class="col-12 col-md-6">
-							<div class="form-floating form-floating-outline">
-								<input type="text" id="editFirstName" name="editFirstName" class="form-control" placeholder="John" required />
-								<label for="editFirstName">First Name</label>
-							</div>
-						</div>
-						<div class="col-12 col-md-6">
-							<div class="form-floating form-floating-outline">
-								<input type="text" id="editLastName" name="editLastName" class="form-control" placeholder="Doe" required />
-								<label for="editLastName">Last Name</label>
-							</div>
-						</div>
-						<div class="col-12 col-md-6">
-						  <div class="form-floating form-floating-outline">
-							<input
-							  type="text"
-							  id="editUsername"
-							  name="editUsername"
-							  class="form-control"
-							  placeholder="LunarEcho" required />
-							<label for="editUsername">Username</label>
-						  </div>
-						</div>
-						<div class="col-12 col-md-6">
-						  <div class="form-floating form-floating-outline">
-							<input
-							  type="text"
-							  id="editGelar"
-							  name="editGelar"
-							  class="form-control"
-							  placeholder="S.Kom." />
-							<label for="editGelar">Title</label>
-						  </div>
-						</div>
-						<div class="col-12">
-							<div class="form-floating form-floating-outline">
-								<select id="editCountry" name="editCountry" class="select2 form-select" data-allow-clear="true">
-									<option value="Australia">Australia</option>
-									<option value="Bangladesh">Bangladesh</option>
-									<option value="Belarus">Belarus</option>
-									<option value="Brazil">Brazil</option>
-									<option value="Canada">Canada</option>
-									<option value="China">China</option>
-									<option value="France">France</option>
-									<option value="Germany">Germany</option>
-									<option value="India">India</option>
-									<option value="Indonesia" selected>Indonesia</option>
-									<option value="Italy">Italy</option>
-									<option value="Japan">Japan</option>
-									<option value="Korea">Korea, Republic of</option>
-									<option value="Mexico">Mexico</option>
-									<option value="Philippines">Philippines</option>
-									<option value="Russia">Russian Federation</option>
-									<option value="South Africa">South Africa</option>
-									<option value="Thailand">Thailand</option>
-									<option value="Turkey">Turkey</option>
-									<option value="Ukraine">Ukraine</option>
-									<option value="United Arab Emirates">United Arab Emirates</option>
-									<option value="United Kingdom">United Kingdom</option>
-									<option value="United States">United States</option>
-								</select>
-								<label for="editCountry">Country</label>
-							</div>
-						</div>
-						<div class="col-12 col-md-6">
-							<div class="form-floating form-floating-outline">
-								<input type="text" id="editEmail" name="editEmail" class="form-control" placeholder="user@haikal.engineer" required />
-								<label for="editEmail">Email</label>
-							</div>
-						</div>
-						<div class="col-12">
-							<div class="form-floating form-floating-outline">
-								<input type="text" id="editAddress1" name="editAddress1" class="form-control" placeholder="Merdeka Square" required />
-								<label for="editAddress1">Address Line 1</label>
-							</div>
-						</div>
-						<div class="col-12">
-							<div class="form-floating form-floating-outline">
-								<input type="text" id="editAddress2" name="editAddress2" class="form-control" placeholder="Monas Street Square" />
-								<label for="editAddress2">Address Line 2</label>
-							</div>
-						</div>
-						<div class="col-12 col-md-6">
-							<div class="form-floating form-floating-outline">
-								<input type="text" id="editPhoneNumber" name="editPhoneNumber" class="form-control" placeholder="+62" required />
-								<label for="editPhoneNumber">Phone Number</label>
-							</div>
-						</div>
-						<div class="col-12 col-md-6">
-							<div class="form-floating form-floating-outline">
-								<input type="text" id="editCity" name="editCity" class="form-control" placeholder="Jakarta" required />
-								<label for="editCity">City</label>
-							</div>
-						</div>
-						<div class="col-12 col-md-6">
-							<div class="form-floating form-floating-outline">
-								<input type="text" id="editState" name="editState" class="form-control" placeholder="Central Jakarta City" required />
-								<label for="editState">State</label>
-							</div>
-						</div>
-						<div class="col-12 col-md-6">
-							<div class="form-floating form-floating-outline">
-								<input type="text" id="editZipCode" name="editZipCode" class="form-control" placeholder="10110" required />
-								<label for="editZipCode">Zip Code</label>
-							</div>
-						</div>
-						<div class="col-12 mt-6">
-							<div class="form-check form-switch">
-								<input type="checkbox" class="form-check-input" id="editTechnician" name="editTechnician" />
-								<label for="editTechnician">Is this user a technician?</label>
-							</div>
-						</div>
-						<div class="col-12">
-							<small class="text-light fw-medium">Signature</small>
-							<div class="signature-container">
-								<canvas id="edit-signature-pad"></canvas>
-								<br>
-								<button id="edit-clear-button" class="btn btn-text-warning waves-effect waves-light">Reset</button>
-							</div>
-						</div>
-						<input type="hidden" id="editSignature" name="editSignature">
-						<div class="col-12 mt-6 d-flex flex-wrap justify-content-center gap-4 row-gap-4">
-							<button type="submit" class="btn btn-primary">Submit</button>
-							<button type="reset" class="btn btn-outline-secondary" data-bs-dismiss="modal" aria-label="Close">Cancel</button>
-						</div>
-					</form>
-				</div>
-			</div>
-		</div>
-	</div>
-  
-	
-<!-- Core JS -->
-<!-- build:js assets/vendor/js/core.js -->
-<script src="../../assets/vendor/libs/jquery/jquery.js"></script>
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-simple modal-add-new-address">
+        <div class="modal-content">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-body p-0">
+                <div class="text-center mb-6">
+                    <h4 class="address-title mb-2">Edit User</h4>
+                    <p class="address-subtitle">Edit user details</p>
+                </div>
+                <form id="editUserForm" class="row g-5">
+                    @method('PUT')
+                    @csrf
+                    <div class="col-12">
+                        <div class="row g-5">
+                            <div class="col-md mb-md-0 mb-5"><div class="form-check custom-option custom-option-icon"><label class="form-check-label custom-option-content" for="editRadioIcon1"><span class="custom-option-body"><i class="ri-user-line"></i><span class="custom-option-title mb-2">User</span><small> Create & edit own logbook. </small></span><input name="editRadioIcon-01" class="form-check-input" type="radio" value="0" id="editRadioIcon1"></label></div></div>
+                            <div class="col-md mb-md-0 mb-5"><div class="form-check custom-option custom-option-icon"><label class="form-check-label custom-option-content" for="editRadioIcon2"><span class="custom-option-body"><i class="ri-customer-service-2-line"></i><span class="custom-option-title mb-2"> Staff </span><small> Create, edit, approve. </small></span><input name="editRadioIcon-01" class="form-check-input" type="radio" value="1" id="editRadioIcon2"></label></div></div>
+                            <div class="col-md"><div class="form-check custom-option custom-option-icon"><label class="form-check-label custom-option-content" for="editRadioIcon3"><span class="custom-option-body"><i class="ri-admin-line"></i><span class="custom-option-title mb-2"> Admin </span><small> Full Access. </small></span><input name="editRadioIcon-01" class="form-check-input" type="radio" value="2" id="editRadioIcon3"></label></div></div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="editUserId" name="user_id">
+                    
+                    <div class="col-12 col-md-6"><div class="form-floating form-floating-outline"><input type="text" id="editFirstName" name="editFirstName" class="form-control" required /><label>First Name</label></div></div>
+                    <div class="col-12 col-md-6"><div class="form-floating form-floating-outline"><input type="text" id="editLastName" name="editLastName" class="form-control" required /><label>Last Name</label></div></div>
+                    <div class="col-12 col-md-6"><div class="form-floating form-floating-outline"><input type="text" id="editUsername" name="editUsername" class="form-control" required /><label>Username</label></div></div>
+                    <div class="col-12 col-md-6"><div class="form-floating form-floating-outline"><input type="text" id="editGelar" name="editGelar" class="form-control" /><label>Title</label></div></div>
+                    
+                    <div class="col-12">
+                        <div class="form-floating form-floating-outline">
+                            <select id="editPosition" name="position" class="select2 form-select" required>
+                                <option value="" disabled>Select Position</option>
+                                @foreach($positions as $position)
+                                    <option value="{{ $position->no }}">{{ $position->name }}</option>
+                                @endforeach
+                            </select>
+                            <label>Position</label>
+                        </div>
+                    </div>
+
+                    <div class="col-12"><div class="form-floating form-floating-outline"><select id="editCountry" name="editCountry" class="select2 form-select"><option value="Indonesia">Indonesia</option><option value="United States">United States</option></select><label>Country</label></div></div>
+                    <div class="col-12 col-md-6"><div class="form-floating form-floating-outline"><input type="email" id="editEmail" name="editEmail" class="form-control" required /><label>Email</label></div></div>
+                    <div class="col-12 col-md-6"><div class="form-floating form-floating-outline"><input type="text" id="editPhoneNumber" name="editPhoneNumber" class="form-control" required /><label>Phone Number</label></div></div>
+                    <div class="col-12"><div class="form-floating form-floating-outline"><input type="text" id="editAddress1" name="editAddress1" class="form-control" required /><label>Address Line 1</label></div></div>
+                    <div class="col-12"><div class="form-floating form-floating-outline"><input type="text" id="editAddress2" name="editAddress2" class="form-control" /><label>Address Line 2</label></div></div>
+                    <div class="col-12 col-md-6"><div class="form-floating form-floating-outline"><input type="text" id="editCity" name="editCity" class="form-control" required /><label>City</label></div></div>
+                    <div class="col-12 col-md-6"><div class="form-floating form-floating-outline"><input type="text" id="editState" name="editState" class="form-control" required /><label>State</label></div></div>
+                    <div class="col-12 col-md-6"><div class="form-floating form-floating-outline"><input type="text" id="editZipCode" name="editZipCode" class="form-control" required /><label>Zip Code</label></div></div>
+                    <div class="col-12 mt-4"><div class="form-check form-switch"><input type="checkbox" class="form-check-input" id="editTechnician" name="editTechnician" /><label>Is this user a technician?</label></div></div>
+                    
+                    <div class="col-12">
+                        <label class="form-label fw-medium mb-2">Signature Option</label>
+                        <div class="btn-group w-100 mb-3" role="group">
+                            <input type="radio" class="btn-check" name="editSigOption" id="editSigDraw" autocomplete="off" checked onchange="toggleSigMethod('draw', 'edit')">
+                            <label class="btn btn-outline-primary" for="editSigDraw"><i class="ri-pencil-line me-1"></i> Draw</label>
+
+                            <input type="radio" class="btn-check" name="editSigOption" id="editSigUpload" autocomplete="off" onchange="toggleSigMethod('upload', 'edit')">
+                            <label class="btn btn-outline-primary" for="editSigUpload"><i class="ri-upload-cloud-line me-1"></i> Upload Image</label>
+                        </div>
+
+                        <div id="section-draw-edit" class="signature-container text-center">
+                            <canvas id="edit-signature-pad" width="400" height="200"></canvas>
+                            <div class="mt-2"><button id="edit-clear-button" class="btn btn-sm btn-outline-danger waves-effect"><i class="ri-eraser-line me-1"></i> Clear</button></div>
+                        </div>
+
+                        <div id="section-upload-edit" class="d-none">
+                            <div class="form-floating form-floating-outline">
+                                <input type="file" id="editSignatureFile" class="form-control" accept="image/png, image/jpeg, image/jpg" />
+                                <label for="editSignatureFile">Choose New Signature File</label>
+                            </div>
+                            <small class="text-muted">Max size: 2MB. Format: PNG, JPG.</small>
+                        </div>
+                    </div>
+                    <input type="hidden" id="editSignature" name="editSignature">
+                    
+                    <div class="col-12 mt-6 d-flex flex-wrap justify-content-center gap-4">
+                        <button type="submit" class="btn btn-primary">Update User</button>
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ asset('assets/vendor/libs/jquery/jquery.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-// Get the canvas element and buttons
-const canvas = document.getElementById("signature-pad");
-const clearButton = document.getElementById("clear-button");
-const ctx = canvas.getContext("2d");
-
-let drawing = false;
-let prevX = 0;
-let prevY = 0;
-
-// Event listeners for drawing
-canvas.addEventListener("mousedown", (e) => {
-	drawing = true;
-	prevX = e.clientX - canvas.getBoundingClientRect().left;
-	prevY = e.clientY - canvas.getBoundingClientRect().top;
-});
-
-canvas.addEventListener("mousemove", (e) => {
-	if (!drawing) return;
-	draw(e.clientX - canvas.getBoundingClientRect().left, e.clientY - canvas.getBoundingClientRect().top);
-});
-
-canvas.addEventListener("mouseup", () => {
-	drawing = false;
-});
-
-canvas.addEventListener("mouseleave", () => {
-	drawing = false;
-});
-
-// Function to draw on the canvas
-function draw(x, y) {
-	ctx.beginPath();
-	ctx.strokeStyle = "#000";
-	ctx.lineWidth = 2;
-	ctx.lineJoin = "round";
-	ctx.moveTo(prevX, prevY);
-	ctx.lineTo(x, y);
-	ctx.closePath();
-	ctx.stroke();
-	prevX = x;
-	prevY = y;
+// Fungsi Toggle Signature yang Diperbarui
+function toggleSigMethod(method, context) {
+    var drawSection = context === 'add' ? '#section-draw-add' : '#section-draw-edit';
+    var uploadSection = context === 'add' ? '#section-upload-add' : '#section-upload-edit';
+    
+    if(method === 'draw') { 
+        $(drawSection).removeClass('d-none'); 
+        $(uploadSection).addClass('d-none'); 
+    } else { 
+        $(drawSection).addClass('d-none'); 
+        $(uploadSection).removeClass('d-none'); 
+    }
 }
 
-// Event listener for the clear button
-clearButton.addEventListener("click", (event) => {
-	event.preventDefault(); // Prevent form submission
-	ctx.clearRect(0, 0, canvas.width, canvas.height);
-});
-</script>
-<script>
 $(document).ready(function() {
-	var dt_user_table = $('#users_list').DataTable({
-		responsive: true,
-		language: {
-			sLengthMenu: 'Show _MENU_',
-			search: '',
-			searchPlaceholder: 'Search Users'
-		},
-		'columnDefs': [
-			{ targets: 0, orderable: false, searchable: true },
-			{
-				checkboxes: {
-					'className': 'dt-checkboxes form-check-input'
-				}
-			}
-		],
-		dom:
-			'<"row"' +
-			'<"col-md-2 d-flex align-items-center justify-content-md-start justify-content-center"<"dt-action-buttons mt-5 mt-md-0"B>>' +
-			'<"col-md-10"<"d-flex align-items-center justify-content-md-end justify-content-center"<"me-4"f><"add-new">>>' +
-			'>t' +
-			'<"row"' +
-			'<"col-sm-12 col-md-6"i>' +
-			'<"col-sm-12 col-md-6"p>' +
-			'>',
-		buttons: [
-			{
-				extend: 'collection',
-				className: 'btn btn-outline-secondary dropdown-toggle waves-effect waves-light',
-				text: '<span class="d-flex align-items-center"><i class="ri-upload-2-line ri-16px me-2"></i> <span class="d-none d-sm-inline-block">Export</span></span> ',
-				buttons: [
-					{
-						extend: 'print',
-						text: '<i class="ri-printer-line me-1"></i>Print',
-						className: 'dropdown-item',
-						exportOptions: {
-							columns: ':visible'
-						},
-						customize: function (win) {
-							$(win.document.body)
-								.css('color', '#000')
-								.css('border-color', '#aaa')
-								.css('background-color', '#fff');
-							$(win.document.body).find('table')
-								.addClass('compact')
-								.css('color', 'inherit')
-								.css('border-color', 'inherit')
-								.css('background-color', 'inherit');
-						}
-					},
-					{
-						extend: 'csv',
-						text: '<i class="ri-file-text-line me-1"></i>Csv',
-						className: 'dropdown-item',
-						exportOptions: {
-							columns: ':visible'
-						}
-					},
-					{
-						extend: 'excel',
-						text: '<i class="ri-file-excel-line me-1"></i>Excel',
-						className: 'dropdown-item',
-						exportOptions: {
-							columns: ':visible'
-						}
-					},
-					{
-						extend: 'pdf',
-						text: '<i class="ri-file-pdf-line me-1"></i>Pdf',
-						className: 'dropdown-item',
-						exportOptions: {
-							columns: ':visible'
-						}
-					},
-					{
-						extend: 'copy',
-						text: '<i class="ri-file-copy-line me-1"></i>Copy',
-						className: 'dropdown-item',
-						exportOptions: {
-							columns: ':visible'
-						}
-					}
-				]
-			}
-		]
-	});
+    function initSignaturePad(canvasId, clearBtnId) {
+        const canvas = document.getElementById(canvasId);
+        const clearBtn = document.getElementById(clearBtnId);
+        if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        let drawing = false, prevX = 0, prevY = 0;
+        ctx.strokeStyle = "#000"; ctx.lineWidth = 2; ctx.lineJoin = "round";
+        function getPos(e) { const rect = canvas.getBoundingClientRect(); return { x: e.clientX - rect.left, y: e.clientY - rect.top }; }
+        $(canvas).on('mousedown', function(e) { drawing = true; const pos = getPos(e); prevX = pos.x; prevY = pos.y; });
+        $(canvas).on('mousemove', function(e) { if (!drawing) return; const pos = getPos(e); ctx.beginPath(); ctx.moveTo(prevX, prevY); ctx.lineTo(pos.x, pos.y); ctx.closePath(); ctx.stroke(); prevX = pos.x; prevY = pos.y; });
+        $(canvas).on('mouseup mouseleave', function() { drawing = false; });
+        if (clearBtn) { $(clearBtn).on('click', function(e) { e.preventDefault(); ctx.clearRect(0, 0, canvas.width, canvas.height); }); }
+    }
+    initSignaturePad('signature-pad', 'clear-button');
+    initSignaturePad('edit-signature-pad', 'edit-clear-button');
 
-	// Tambahkan tombol "Add New" ke dalam div "add-new"
-	$('.add-new').html(
-		"<button class='btn btn-primary waves-effect waves-light' data-bs-toggle='modal' data-bs-target='#addNewUser'><i class='ri-add-line me-0 me-sm-1 d-inline-block d-sm-none'></i><span class= 'd-none d-sm-inline-block'> Add New User </span ></button>"
-	);
-	$('input[type="checkbox"][autocomplete="off"]').removeClass().addClass('dt-checkboxes form-check-input');
-	
-	$('.select-all').on('click', function() {
-		// Check/uncheck all checkboxes in the table
-		var rows = table.rows({ 'search': 'applied' }).nodes();
-		$('input[type="checkbox"]', rows).prop('checked', this.checked);
-	});
+    function isCanvasBlank(canvas) {
+        const blank = document.createElement('canvas'); blank.width = canvas.width; blank.height = canvas.height;
+        return canvas.toDataURL() === blank.toDataURL();
+    }
 
-	// Handle click on checkbox to set state of "Select all" control
-	$('.datatables-users tbody').on('change', 'input[type="checkbox"]', function() {
-		// If checkbox is not checked
-		if (!this.checked) {
-			var el = $('.select-all').get(0);
-			// If "Select all" control is checked and has 'indeterminate' property
-			if (el && el.checked && ('indeterminate' in el)) {
-				// Set visual state of "Select all" control 
-				// as 'indeterminate'
-				el.indeterminate = true;
-			}
-		}
-	});
-	
-	function saveCurrentPage() {
-		//var currentPage = dt_user_table.page();
-		//sessionStorage.setItem('currentPage', currentPage);
-		var info = dt_user_table.page.info();
-		var currentPage = info.page;
-		var lastPage = info.pages - 1;
-	
-		if (currentPage === lastPage) {
-			sessionStorage.setItem('currentPage', currentPage);
-		} else {
-			sessionStorage.setItem('currentPage', lastPage);
-		}
-	}
-	// Mengatur DataTable ke halaman yang disimpan
-	function setCurrentPage() {
-		var currentPage = sessionStorage.getItem('currentPage');
-		if (currentPage) {
-			dt_user_table.page(parseInt(currentPage)).draw(false);
-			sessionStorage.removeItem('currentPage'); // Hapus data dari storage setelah digunakan
-		}
-	}
-	function isCanvasBlank(canvas) {
-		const blank = document.createElement('canvas');
-		blank.width = canvas.width;
-		blank.height = canvas.height;
-		return canvas.toDataURL() === blank.toDataURL();
-	}
-	setCurrentPage();
-	var isSubmitting = false;
-	$('#addNewUserForm').on('submit', function (e) {
-		e.preventDefault();
-		console.log('Form submission started');
-		if (isSubmitting) {
-			console.log('Already submitting, returning');
-			return; // prevent multiple submissions
-		}
-		isSubmitting = true;
-		var canvas = document.getElementById('signature-pad');
-		if (isCanvasBlank(canvas)) {
-			console.log('Canvas is blank, showing alert');
-			alert('Please provide a signature.');
-			isSubmitting = false;
-			return false;
-		}
-		console.log('Canvas has signature, proceeding');
-		var signatureData = canvas.toDataURL('image/png');
-		document.getElementById('signature').value = signatureData;
-		var formData = $(this).serialize();
-		console.log('Form data:', formData);
-		$.ajax({
-			url: '{{ route("users.store") }}',
-			type: 'POST',
-			data: formData,
-			dataType: 'json',
-			success: function(data) {
-				console.log('Success response:', data);
-				if (data.success) {
-					alert(data.message);
-					location.reload();
-				} else {
-					alert(data.message || 'Terjadi kesalahan saat menambahkan user');
-				}
-			},
-			error: function(jqXHR, textStatus, errorThrown) {
-				console.error('AJAX Error:', textStatus, errorThrown);
-				console.error('Response Text:', jqXHR.responseText);
-				console.error('Status Code:', jqXHR.status);
-				alert('An error occurred. Please try again.');
-			},
-			complete: function() {
-				isSubmitting = false;
-			}
-		});
-	});
-	
-	$('#users_list').on('click', '.edit-record', function () {
-		var userId = $(this).data('id');
-		$.ajax({
-			url: '{{ route("users.edit", ":id") }}'.replace(':id', userId),
-			type: 'GET',
-			dataType: 'json',
-			success: function(data) {
-				if (data.success) {
-					var user = data.user;
-					$('#editUserId').val(user.id);
-					$('#editFirstName').val(user.first_name);
-					$('#editLastName').val(user.last_name);
-					$('#editGelar').val(user.gelar);
-					$('#editUsername').val(user.username);
-					$('#editEmail').val(user.email);
-					$('#editCountry').val(user.country).trigger('change');
-					$('#editAddress1').val(user.address1);
-					$('#editAddress2').val(user.address2);
-					$('#editPhoneNumber').val(user.phone_number);
-					$('#editCity').val(user.city);
-					$('#editState').val(user.state);
-					$('#editZipCode').val(user.zip_code);
-					$('#editTechnician').prop('checked', user.technician == 1);
-					
-					// Clear the signature pad and redraw the signature
-					var editCanvas = document.getElementById('edit-signature-pad');
-					var ctx = editCanvas.getContext('2d');
-					ctx.clearRect(0, 0, editCanvas.width, editCanvas.height);
-					if (user.signature) {
-						var signatureImage = new Image();
-						signatureImage.src = user.signature;
-						signatureImage.onload = function() {
-							ctx.drawImage(signatureImage, 0, 0);
-						};
-					}
-					
-					$('.form-check.custom-option').removeClass('checked');
-					// Set the access level radio button
-					if (user.access_level == 2) {
-						$('#editRadioIcon3').prop('checked', true).closest('.form-check.custom-option').addClass('checked');
-					}
-					else if (user.access_level == 1) {
-						$('#editRadioIcon2').prop('checked', true).closest('.form-check.custom-option').addClass('checked');
-					}
-					else {
-						 $('#editRadioIcon1').prop('checked', true).closest('.form-check.custom-option').addClass('checked');
-					}
-					
-					// Set up the signature pad for editing
-					setupEditSignaturePad();
-					
-					$('#editUserModal').modal('show');
-				} else {
-					alert(data.message);
-				}
-			},
-			error: function(jqXHR, textStatus, errorThrown) {
-				alert('Error retrieving user details. Please try again.');
-			}
-		});
-	});
+    function readFileAsBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+            reader.readAsDataURL(file);
+        });
+    }
 
-	function setupEditSignaturePad() {
-		let editCanvas = document.getElementById('edit-signature-pad');
-		let ctx = editCanvas.getContext('2d');
-		let drawing = false;
-		let prevX = 0;
-		let prevY = 0;
+    // --- DataTable Initialization (Sama seperti sebelumnya) ---
+    var dt_user_table = $('#users_list').DataTable({
+        responsive: {
+            details: {
+                display: $.fn.dataTable.Responsive.display.modal({
+                    header: function (row) { return '<i class="ri-user-search-line me-2"></i> Detail Pengguna: ' + row.data()[3]; }
+                }),
+                type: 'column',
+                renderer: function (api, rowIdx, columns) {
+                    var data = $.map(columns, function (col, i) {
+                        if (col.columnIndex === 0 || col.columnIndex === 9) return ''; 
+                        return col.hidden ? '<tr data-dt-row="' + col.rowIndex + '" data-dt-column="' + col.columnIndex + '"><td class="dtr-title">' + col.title + ':' + '</td> <td class="dtr-data">' + col.data + '</td></tr>' : '';
+                    }).join('');
+                    return data ? $('<table class="table dtr-details text-nowrap"/>').append(data) : false;
+                }
+            }
+        },
+        language: { sLengthMenu: 'Show _MENU_', search: '', searchPlaceholder: 'Search Users' },
+        columnDefs: [{ className: 'control', orderable: false, targets: 0, responsivePriority: 1 }, { targets: 2, responsivePriority: 1 }, { targets: -1, responsivePriority: 2 }, { targets: [4, 5, 8, 9], responsivePriority: 10 }],
+        dom: '<"card-header dt-header border-bottom"<"d-flex align-items-center" B><"d-flex align-items-center gap-2" f <"add-new"> >>t<"row mx-2 mt-3"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>',
+        buttons: [{ extend: 'collection', className: 'btn btn-outline-secondary dropdown-toggle waves-effect waves-light', text: '<i class="ri-upload-2-line ri-16px me-2"></i> Export', buttons: ['print', 'csv', 'excel', 'pdf', 'copy'] }]
+    });
 
-		// Remove existing event listeners
-		editCanvas.removeEventListener("mousedown", editCanvasMouseDown);
-		editCanvas.removeEventListener("mousemove", editCanvasMouseMove);
-		editCanvas.removeEventListener("mouseup", editCanvasMouseUp);
-		editCanvas.removeEventListener("mouseleave", editCanvasMouseLeave);
+    $('.add-new').html("<button class='btn btn-primary waves-effect waves-light text-nowrap' data-bs-toggle='modal' data-bs-target='#addNewUser'><i class='ri-add-line me-1'></i> Add New</button>");
+    $('#modalUsername, #editUsername').on('input', function() { $(this).val($(this).val().toLowerCase().replace(/[^a-z0-9]/g, '')); });
 
-		// Add new event listeners
-		editCanvas.addEventListener("mousedown", editCanvasMouseDown);
-		editCanvas.addEventListener("mousemove", editCanvasMouseMove);
-		editCanvas.addEventListener("mouseup", editCanvasMouseUp);
-		editCanvas.addEventListener("mouseleave", editCanvasMouseLeave);
+    // --- ADD USER SUBMIT LOGIC ---
+    var isSubmitting = false;
+    $('#addNewUserForm').on('submit', async function (e) {
+        e.preventDefault();
+        if (isSubmitting) return;
 
-		function editCanvasMouseDown(e) {
-			drawing = true;
-			prevX = e.clientX - editCanvas.getBoundingClientRect().left;
-			prevY = e.clientY - editCanvas.getBoundingClientRect().top;
-		}
+        let finalSignature = '';
+        if ($('#sigDraw').is(':checked')) {
+            var canvas = document.getElementById('signature-pad');
+            if (isCanvasBlank(canvas)) { Swal.fire({ icon: 'warning', title: 'Perhatian!', text: 'Harap berikan tanda tangan.' }); return false; }
+            finalSignature = canvas.toDataURL('image/png');
+        } else {
+            const fileInput = document.getElementById('signatureFile');
+            if (fileInput.files.length === 0) { Swal.fire({ icon: 'warning', title: 'Perhatian!', text: 'Harap upload file tanda tangan.' }); return false; }
+            try { finalSignature = await readFileAsBase64(fileInput.files[0]); } 
+            catch (err) { Swal.fire({ icon: 'error', text: 'Gagal membaca file.' }); return false; }
+        }
+        $('#signature').val(finalSignature);
 
-		function editCanvasMouseMove(e) {
-			if (!drawing) return;
-			drawEdit(e.clientX - editCanvas.getBoundingClientRect().left, e.clientY - editCanvas.getBoundingClientRect().top);
-		}
+        isSubmitting = true;
+        $.ajax({
+            url: '{{ route("users.store") }}',
+            type: 'POST',
+            data: $(this).serialize(),
+            dataType: 'json',
+            success: function(data) {
+                if (data.success) {
+                    $('#addNewUser').modal('hide');
+                    sessionStorage.setItem('successMessage', data.message);
+                    Swal.fire({ icon: 'success', title: 'Berhasil!', text: data.message, showConfirmButton: false, timer: 1500 }).then(() => { location.reload(); });
+                }
+            },
+            error: function(xhr) {
+                let msg = 'Terjadi kesalahan jaringan.';
+                if(xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON.message;
+                Swal.fire({ icon: 'error', title: 'Gagal!', text: msg });
+            },
+            complete: function() { isSubmitting = false; }
+        });
+    });
 
-		function editCanvasMouseUp() {
-			drawing = false;
-		}
+    // --- EDIT BUTTON CLICK ---
+    $('#users_list').on('click', '.edit-record', function () {
+        var userId = $(this).data('id');
+        var editCanvas = document.getElementById('edit-signature-pad');
+        if (editCanvas) { var ctx = editCanvas.getContext('2d'); ctx.clearRect(0, 0, editCanvas.width, editCanvas.height); }
+        
+        // Reset radio buttons to 'Draw' by default
+        $('#editSigDraw').prop('checked', true);
+        toggleSigMethod('draw', 'edit');
+        $('#editSignatureFile').val(''); // Reset file input
 
-		function editCanvasMouseLeave() {
-			drawing = false;
-		}
+        $.ajax({
+            url: '{{ route("users.edit", ":id") }}'.replace(':id', userId),
+            type: 'GET',
+            success: function(data) {
+                if (data.success) {
+                    var user = data.user;
+                    $('#editUserId').val(user.id);
+                    $('#editFirstName').val(user.first_name);
+                    $('#editLastName').val(user.last_name);
+                    $('#editGelar').val(user.gelar);
+                    $('#editUsername').val(user.username);
+                    $('#editEmail').val(user.email);
+                    $('#editCountry').val(user.country).trigger('change');
+                    $('#editAddress1').val(user.address1);
+                    $('#editAddress2').val(user.address2);
+                    $('#editPhoneNumber').val(user.phone_number);
+                    $('#editCity').val(user.city);
+                    $('#editState').val(user.state);
+                    $('#editZipCode').val(user.zip_code);
+                    $('#editTechnician').prop('checked', user.technician == 1);
+                    
+                    // Set Position Dropdown
+                    $('#editPosition').val(user.position).trigger('change');
 
-		function drawEdit(x, y) {
-			ctx.beginPath();
-			ctx.strokeStyle = "#000";
-			ctx.lineWidth = 2;
-			ctx.lineJoin = "round";
-			ctx.moveTo(prevX, prevY);
-			ctx.lineTo(x, y);
-			ctx.closePath();
-			ctx.stroke();
-			prevX = x;
-			prevY = y;
-		}
-	}
+                    $('.form-check.custom-option').removeClass('checked');
+                    var radioId = user.access_level == 2 ? '#editRadioIcon3' : (user.access_level == 1 ? '#editRadioIcon2' : '#editRadioIcon1');
+                    $(radioId).prop('checked', true).closest('.form-check.custom-option').addClass('checked');
 
-	// Edit User Form Submission
-	$('#editUserForm').on('submit', function (e) {
-		e.preventDefault();
-		var canvas = document.getElementById('edit-signature-pad');
-		if (isCanvasBlank(canvas)) {
-			alert('Please provide a signature.');
-			return false;
-		}
-		var signatureData = canvas.toDataURL('image/png');
-		document.getElementById('editSignature').value = signatureData;
-		var formData = $(this).serialize();
-		var userId = $('#editUserId').val();
-		
-		$.ajax({
-			url: '{{ route("users.update", ":id") }}'.replace(':id', userId),
-			type: 'PUT',
-			data: formData,
-			dataType: 'json',
-			success: function(data) {
-				if (data.success) {
-					alert(data.message);
-					$('#editUserModal').modal('hide');
-					location.reload();
-				} else {
-					alert(data.message || 'Terjadi kesalahan saat mengupdate user');
-				}
-			},
-			error: function(jqXHR, textStatus, errorThrown) {
-				console.error('Edit AJAX Error:', textStatus, errorThrown);
-				console.error('Edit Response Text:', jqXHR.responseText);
-				alert('An error occurred. Please try again.');
-			},
-			error: function(jqXHR, textStatus, errorThrown) {
-				console.error('AJAX Error:', textStatus, errorThrown);
-				console.error('Response Text:', jqXHR.responseText);
-				alert('An error occurred. Please try again.');
-			}
-		});
-	});
-	
-	$('#users_list').on('click', '.delete-record', function () {
-		var $row = $(this).closest('tr');
-		var id = $(this).data('id');
+                    if (user.signature && editCanvas) {
+                        var img = new Image();
+                        img.src = user.signature.startsWith('data:') ? user.signature : '{{ asset("") }}' + user.signature;
+                        img.onload = function() { editCanvas.getContext('2d').drawImage(img, 0, 0, editCanvas.width, editCanvas.height); };
+                    }
+                    $('#editUserModal').modal('show');
+                }
+            }
+        });
+    });
 
-		if (confirm('Apakah Anda yakin ingin menghapus user ini?')) {
-			$.ajax({
-				url: '{{ route("users.destroy", ":id") }}'.replace(':id', id),
-				type: 'DELETE',
-				data: {
-					_token: $('meta[name="csrf-token"]').attr('content')
-				},
-				dataType: 'json',
-				success: function(data) {
-					if (data.success) {
-						alert(data.message);
-						location.reload();
-					} else {
-						alert(data.message);
-					}
-				},
-				error: function(jqXHR, textStatus, errorThrown) {
-					console.error('AJAX Error:', textStatus, errorThrown);
-					alert('Error sending request. Please try again.');
-				}
-			});
-		}
-	});
-});
-const editClearButton = document.getElementById("edit-clear-button");
-	editClearButton.addEventListener("click", (event) => {
-		event.preventDefault(); // Prevent form submission
-		var editCanvas = document.getElementById('edit-signature-pad');
-		var ctx = editCanvas.getContext("2d");
-		ctx.clearRect(0, 0, editCanvas.width, editCanvas.height);
+    // --- EDIT USER SUBMIT LOGIC ---
+    $('#editUserForm').on('submit', async function (e) {
+        e.preventDefault();
+        
+        let finalSignature = '';
+        var canvas = document.getElementById('edit-signature-pad');
+        
+        // Cek mode mana yang aktif
+        if ($('#editSigDraw').is(':checked')) {
+            // Jika canvas tidak kosong, gunakan itu. Jika kosong, biarkan kosong (controller mungkin akan mempertahankan yang lama)
+            if (canvas && !isCanvasBlank(canvas)) { 
+                finalSignature = canvas.toDataURL('image/png'); 
+            }
+        } else {
+            const fileInput = document.getElementById('editSignatureFile');
+            if (fileInput.files.length > 0) { 
+                try { finalSignature = await readFileAsBase64(fileInput.files[0]); } 
+                catch (err) { Swal.fire({ icon: 'error', text: 'Gagal membaca file.' }); return false; }
+            }
+        }
+        
+        // Set nilai ke hidden input
+        $('#editSignature').val(finalSignature);
+
+        var userId = $('#editUserId').val();
+        $.ajax({
+            url: '{{ route("users.update", ":id") }}'.replace(':id', userId),
+            type: 'PUT',
+            data: $(this).serialize(),
+            success: function(data) {
+                if (data.success) {
+                    $('#editUserModal').modal('hide');
+                    sessionStorage.setItem('successMessage', data.message);
+                    Swal.fire({ icon: 'success', title: 'Berhasil!', text: data.message, showConfirmButton: false, timer: 1500 }).then(() => { location.reload(); });
+                }
+            },
+            error: function(xhr) {
+                let msg = 'Gagal update user.';
+                if(xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON.message;
+                Swal.fire({ icon: 'error', title: 'Error!', text: msg });
+            }
+        });
+    });
+
+    // --- DELETE RECORD LOGIC (Sama seperti sebelumnya) ---
+    $('#users_list').on('click', '.delete-record', function () {
+        var id = $(this).data('id');
+        Swal.fire({ title: 'Hapus User?', text: "Data tidak bisa dikembalikan!", icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya, Hapus!', customClass: { confirmButton: 'btn btn-danger me-3', cancelButton: 'btn btn-secondary' }, buttonsStyling: false }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: '{{ route("users.destroy", ":id") }}'.replace(':id', id),
+                    type: 'DELETE',
+                    data: { _token: $('meta[name="csrf-token"]').attr('content') },
+                    success: function(data) {
+                        if (data.success) { sessionStorage.setItem('successMessage', data.message); location.reload(); }
+                        else { Swal.fire({ icon: 'error', text: data.message }); }
+                    },
+                    error: function() { Swal.fire({ icon: 'error', text: 'Gagal menghapus user.' }); }
+                });
+            }
+        });
+    });
 });
 </script>
-
-
 @endsection
-

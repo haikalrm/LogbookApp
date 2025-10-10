@@ -34,7 +34,6 @@
 
   {{-- Helpers & Config --}}
   <script src="{{ asset('assets/vendor/js/helpers.js') }}"></script>
-  <script src="{{ asset('assets/vendor/js/template-customizer.js') }}"></script>
   <script src="{{ asset('assets/js/config.js') }}"></script>
 
   @stack('styles')
@@ -96,37 +95,79 @@
 <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
 
 <script>
-    $(document).ready(function () {
-        const notyf = new Notyf({
-            duration: 5000,
-            position: { x: 'right', y: 'bottom' },
-        });
+$(document).ready(function () {
+    // 1. Definisikan array untuk mengumpulkan semua pesan.
+    const successMessages = [];
+    const errorMessages = [];
 
-        // Jika ada pesan sukses tunggal
-        @if (session('successMessage'))
-            notyf.success("{{ session('successMessage') }}");
-        @endif
-
-        // Jika ada pesan error tunggal
-        @if (session('errorMessage'))
-            notyf.error("{{ session('errorMessage') }}");
-        @endif
-
-        // Jika ada beberapa pesan sukses (multiple success messages)
-        @if (session('successMessages'))
-            @foreach(session('successMessages') as $message)
-                notyf.success("{{ $message }}");
-            @endforeach
-        @endif
-
-        // Jika ada beberapa pesan error (multiple error messages)
-        @if (session('errorMessages'))
-            @foreach(session('errorMessages') as $message)
-                notyf.error("{{ $message }}");
-            @endforeach
-        @endif
+    const notyf = new Notyf({
+        duration: 5000,
+        position: { x: 'right', y: 'bottom' },
     });
+
+    // 2. Modifikasi fungsi flash agar HANYA MENGUMPULKAN pesan ke array.
+    function flash(type, message) {
+        if (!message) return;
+        if (!['success', 'error'].includes(type)) return;
+
+        const msgs = Array.isArray(message) ? message : [message];
+
+        msgs.forEach(msg => {
+            if (type === 'success') successMessages.push(msg); // Kumpulkan
+            else errorMessages.push(msg); // Kumpulkan
+        });
+    }
+
+    // --- Ambil Pesan dari PHP Session (Backend) ---
+    @if (session('successMessage'))
+        @php
+            $msg = session('successMessage');
+            // Menghapus penggunaan variabel $encoded yang tidak perlu di sini
+            $msgs_array = is_array($msg) ? $msg : [$msg];
+        @endphp
+        // Menggunakan flash untuk mengumpulkan pesan dari session PHP
+        flash('success', {!! json_encode($msgs_array) !!}); 
+    @endif
+
+    @if (session('errorMessage'))
+        @php
+            $msg = session('errorMessage');
+            $msgs_array = is_array($msg) ? $msg : [$msg];
+        @endphp
+        flash('error', {!! json_encode($msgs_array) !!});
+    @endif
+
+    // --- Ambil Pesan dari sessionStorage (Frontend) ---
+    const storageSuccess = sessionStorage.getItem('successMessage');
+    if(storageSuccess){
+        try {
+            const parsed = JSON.parse(storageSuccess);
+            // Menggunakan flash untuk mengumpulkan pesan dari sessionStorage
+            flash('success', Array.isArray(parsed) ? parsed : [parsed]); 
+        } catch(e) {
+            flash('success', storageSuccess);
+        }
+        sessionStorage.removeItem('successMessage');
+    }
+
+    const storageError = sessionStorage.getItem('errorMessage');
+    if(storageError){
+        try {
+            const parsed = JSON.parse(storageError);
+            flash('error', Array.isArray(parsed) ? parsed : [parsed]);
+        } catch(e) {
+            flash('error', storageError);
+        }
+        sessionStorage.removeItem('errorMessage');
+    }
+	
+    // 3. BARIS INI KINI BERFUNGSI SEBAGAI DISPLAY TUNGGAL UNTUK SEMUA PESAN
+    // Karena successMessages dan errorMessages sudah didefinisikan dan diisi.
+    successMessages.forEach(msg => notyf.success(msg));
+    errorMessages.forEach(msg => notyf.error(msg));
+});
 </script>
+
 
 @stack('scripts')
 </body>

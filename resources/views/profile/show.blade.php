@@ -11,28 +11,33 @@
                 </div>
                 <div class="user-profile-header d-flex flex-column flex-sm-row text-sm-start text-center mb-5">
                     <div class="flex-shrink-0 mt-n2 mx-sm-0 mx-auto">
-                        {{-- Path ke gambar profil pengguna dari session (jika diperlukan) --}}
-                        <img src="{{ asset('assets/img/profile/' . $user->profile_picture) }}" alt="user image" class="d-block h-auto ms-0 ms-sm-5 rounded-4 user-profile-img" width="120" height="125">
-
+                        {{-- GRAVATAR LOGIC --}}
+                        @php
+                            $hash = md5(strtolower(trim($user->email)));
+                            $gravatarUrl = "https://www.gravatar.com/avatar/$hash?s=250&d=mp";
+                        @endphp
+                        
+                        {{-- Menampilkan Gravatar --}}
+                        <img src="{{ $gravatarUrl }}" alt="user image" class="d-block h-auto ms-0 ms-sm-5 rounded-4 user-profile-img" width="120" height="125" style="border: 5px solid #fff;">
                     </div>
                     <div class="flex-grow-1 mt-4 mt-sm-12">
                         <div class="d-flex align-items-md-end align-items-sm-start align-items-center justify-content-md-between justify-content-start mx-5 flex-md-row flex-column gap-6">
                             <div class="user-profile-info">
                                 {{-- Menampilkan data dari objek $user --}}
-                                <h4 class="mb-2">{{ $user->name }}</h4>
+                                <h4 class="mb-2">{{ $user->fullname ?? $user->name }}</h4>
                                 <ul class="list-inline mb-0 d-flex align-items-center flex-wrap justify-content-sm-start justify-content-center gap-4">
                                     <li class="list-inline-item">
                                         <i class="ri-user-2-line me-2 ri-24px"></i>
-                                        <span class="fw-medium">{{ $user->position }}</span>
+                                        <span class="fw-medium">{{ $user->position ?? 'Karyawan' }}</span>
                                     </li>
                                     <li class="list-inline-item">
                                         <i class="ri-map-pin-line me-2 ri-24px"></i>
-                                        <span class="fw-medium">{{ $user->city }}</span>
+                                        <span class="fw-medium">{{ $user->city ?? 'Unknown' }}</span>
                                     </li>
                                     <li class="list-inline-item">
                                         <i class="ri-calendar-line me-2 ri-24px"></i>
-                                        {{-- Menggunakan Carbon untuk memformat tanggal dengan mudah --}}
-                                        <span class="fw-medium">Joined {{ $user->joined->format('F Y') }}</span>
+                                        {{-- Pastikan 'joined' adalah instance Carbon di model User --}}
+                                        <span class="fw-medium">Joined {{ $user->created_at ? $user->created_at->format('F Y') : 'N/A' }}</span>
                                     </li>
                                 </ul>
                             </div>
@@ -45,6 +50,7 @@
             </div>
         </div>
     </div>
+    
     <div class="row">
         <div class="col-md-12">
             <div class="nav-align-top">
@@ -56,15 +62,16 @@
             </div>
         </div>
     </div>
+    
     <div class="row">
         <div class="col-xl-4 col-lg-5 col-md-5">
             <div class="card mb-6">
                 <div class="card-body">
                     <small class="card-text text-uppercase text-muted small">About</small>
                     <ul class="list-unstyled my-3 py-1">
-                        <li class="d-flex align-items-center mb-4"><i class="ri-user-3-line ri-24px"></i><span class="fw-medium mx-2">Full Name:</span> <span>{{ $user->fullname }}</span></li>
+                        <li class="d-flex align-items-center mb-4"><i class="ri-user-3-line ri-24px"></i><span class="fw-medium mx-2">Username:</span> <span>{{ $user->name }}</span></li>
                         <li class="d-flex align-items-center mb-4"><i class="ri-tools-line ri-24px"></i><span class="fw-medium mx-2">Technician:</span> <span>{{ $user->technician ? 'True' : 'False' }}</span></li>
-                        <li class="d-flex align-items-center mb-4"><i class="ri-star-smile-line ri-24px"></i><span class="fw-medium mx-2">Role:</span>
+						<li class="d-flex align-items-center mb-4"><i class="ri-star-smile-line ri-24px"></i><span class="fw-medium mx-2">Role:</span>
                             <span>
                                 @if($user->access_level == 2)
                                     Admin
@@ -75,7 +82,7 @@
                                 @endif
                             </span>
                         </li>
-                        <li class="d-flex align-items-center mb-4"><i class="ri-flag-2-line ri-24px"></i><span class="fw-medium mx-2">Country:</span> <span>Indonesia</span></li>
+                        <li class="d-flex align-items-center mb-4"><i class="ri-flag-2-line ri-24px"></i><span class="fw-medium mx-2">Country:</span> <span>{{ $user->country ?? 'Indonesia' }}</span></li>
                     </ul>
                     <small class="card-text text-uppercase text-muted small">Contacts</small>
                     <ul class="list-unstyled my-3 py-1">
@@ -93,7 +100,8 @@
                     </ul>
                 </div>
             </div>
-            </div>
+        </div>
+        
         <div class="col-xl-8 col-lg-7 col-md-7">
             <div class="card card-action mb-6">
                 <div class="card-header align-items-center">
@@ -126,8 +134,9 @@
                     </ul>
                 </div>
             </div>
-            </div>
+        </div>
     </div>
+    
     <div class="modal fade" id="modal_barcode" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">

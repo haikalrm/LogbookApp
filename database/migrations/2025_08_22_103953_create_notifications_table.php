@@ -16,7 +16,6 @@ return new class extends Migration
 			$table->foreignId('author_id')->constrained('users')->onDelete('cascade');
 			$table->string('title');
 			$table->text('body');
-			$table->string('profile')->nullable();
             $table->string('link')->nullable();
 			$table->timestamp('read_at')->nullable();
 			$table->timestamps();

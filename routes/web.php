@@ -1,85 +1,192 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\Auth\LoginController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\AccountController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LogbookController;
 use App\Http\Controllers\LogbookItemController;
 use App\Http\Controllers\ToolController;
 use App\Http\Controllers\PositionController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\AccountController;
+use App\Http\Controllers\UnitController;
 
+/*
+|--------------------------------------------------------------------------
+| Public Routes
+|--------------------------------------------------------------------------
+*/
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', fn () => view('welcome'));
 
-// Route untuk authenticated users
-Route::middleware('auth')->group(function () {
-	// Routes for users profile
-	Route::get('/profile/{user:name}', [ProfileController::class, 'show'])
-     ->name('profile.show');
+Route::get('/api-docs', function () {
+    $path = resource_path('docs/api_v1.md');
+    if (!file_exists($path)) abort(404, 'File api.md not found');
 
-	Route::get('/profile/{user:name}/notifications', [ProfileController::class, 'notifications'])->name('profile.notifications');
-	Route::get('/qr-code/{user:name}', [ProfileController::class, 'generateQrCode'])->name('profile.qr');
-	
-	// Routes for account settings
-	Route::middleware('auth')->prefix('account')->name('account.')->group(function () {
-		Route::get('/settings', [AccountController::class, 'settings'])->name('settings');
-		Route::get('/security', [AccountController::class, 'security'])->name('security');
-		Route::get('/notifications', [AccountController::class, 'notifications'])->name('notifications');
+    $content = file_get_contents($path);
+    $lines = explode("\n", $content);
+    
+    $spec = ['base_url' => url('/api/v1'), 'groups' => []];
+    $currentGroup = null;
+    $currentRoute = null;
 
-		Route::patch('/settings/details', [AccountController::class, 'updateDetails'])->name('update.details');
-		Route::put('/security/password', [AccountController::class, 'updatePassword'])->name('update.password');
-	});
+    foreach ($lines as $line) {
+        $line = trim($line);
+        if (empty($line)) continue;
 
-	// Routes for QRCode
-	Route::get('/qr-code/{user:name}', [ProfileController::class, 'generateQrCode'])
-		 ->name('profile.qr');
+        if (str_starts_with($line, '# ') && !str_starts_with($line, '##')) {
+            if ($currentRoute) $currentGroup['routes'][] = $currentRoute; // Save prev route
+            if ($currentGroup) $spec['groups'][] = $currentGroup; // Save prev group
+            
+            $currentGroup = [
+                'name' => trim(substr($line, 2)),
+                'routes' => []
+            ];
+            $currentRoute = null;
+        }
+        
+        elseif (str_starts_with($line, '## [')) {
+            if ($currentRoute) $currentGroup['routes'][] = $currentRoute; // Save prev route
 
-    // Dashboard Route
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+            preg_match('/\[(GET|POST|PUT|DELETE|PATCH)\]\s+(\S+)(.*)/', $line, $matches);
+            $isPublic = str_contains(strtolower($matches[3] ?? ''), 'public');
 
-	 // Routes for Logbook
-	Route::get('/logbook/{unit_id}/dashboard', [LogbookController::class, 'index'])->name('logbook.index');
-    Route::get('/logbook/{unit_id}/dashboard/create', [LogbookController::class, 'create'])->name('logbook.create');
-    Route::post('/logbook/{unit_id}/dashboard/store', [LogbookController::class, 'store'])->name('logbook.store');
-    Route::get('/logbook/{unit_id}/dashboard/{logbook_id}/items', [LogbookController::class, 'items'])->name('logbook.items');
-    Route::get('/logbook/{unit_id}/dashboard/edit/{logbook_id}', [LogbookController::class, 'edit'])->name('logbook.edit');
-    Route::put('/logbook/{unit_id}/dashboard/update/{logbook_id}', [LogbookController::class, 'update'])->name('logbook.update');
-    Route::delete('/logbook/{unit_id}/dashboard/delete/{logbook_id}', [LogbookController::class, 'destroy'])->name('logbook.destroy');
-	Route::put('/logbook/{unit_id}/dashboard/approve/{logbook_id}', [LogbookController::class, 'approve'])->name('logbook.approve');
-	Route::get('/logbook/{unit_id}/dashboard/{logbook_id}/view', [LogbookController::class, 'show'])->name('logbook.view');
-	Route::get('/logbook/{unit_id}/dashboard/{logbook_id}/edit-content', [LogbookController::class, 'editContent'])->name('logbook.edit.content');
-	
-	
-	// Routes for Tools
-	Route::get('/manage/tools', [ToolController::class, 'index'])->name('tools.index');
-	Route::post('/tools/update', [ToolController::class, 'update']);
-	Route::post('/tools/delete', [ToolController::class, 'delete']);
-	
-	//Routes for positions
-	Route::get('/manage/position', [PositionController::class, 'index'])->name('position.index');
-	Route::post('/positions/update', [PositionController::class, 'update'])->name('positions.update');
-	Route::post('/positions/delete', [PositionController::class, 'delete'])->name('positions.delete');
-	
-	//Routes for manage Users
-	Route::get('/manage/users', [UserController::class, 'index'])->name('users.index');
-	Route::get('/manage/users/create', [UserController::class, 'create'])->name('users.create');
-	Route::post('/manage/users', [UserController::class, 'store'])->name('users.store');
-	Route::get('/manage/users/{user}', [UserController::class, 'show'])->name('users.show');
-	Route::get('/manage/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
-	Route::put('/manage/users/{user}', [UserController::class, 'update'])->name('users.update');
-	Route::delete('/manage/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+            $currentRoute = [
+                'method' => $matches[1],
+                'uri' => $matches[2],
+                'auth' => !$isPublic,
+                'summary' => '',
+                'description' => '',
+                'params' => []
+            ];
+        }
 
-    // Routes for Logbook Items
-    Route::get('/logbook/{unit_id}/dashboard/{logbook_id}/item/create', [LogbookItemController::class, 'create'])->name('logbook.item.create');
-    Route::post('/logbook/{unit_id}/dashboard/{logbook_id}/item/store', [LogbookItemController::class, 'store'])->name('logbook.item.store');
-    Route::get('/logbook/{unit_id}/dashboard/{logbook_id}/item/{item_id}/edit', [LogbookItemController::class, 'edit'])->name('logbook.item.edit');
-    Route::put('/logbook/{unit_id}/dashboard/{logbook_id}/item/{item_id}', [LogbookItemController::class, 'update'])->name('logbook.item.update');
-    Route::delete('/logbook/{unit_id}/dashboard/{logbook_id}/item/{item_id}', [LogbookItemController::class, 'destroy'])->name('logbook.item.destroy');
+        elseif (str_starts_with($line, '> ')) {
+            if ($currentRoute) $currentRoute['summary'] = trim(substr($line, 2));
+        }
+
+        elseif (str_starts_with($line, '|')) {
+            if (str_contains($line, '---')) continue;
+            if (str_contains($line, '| Name |') && str_contains($line, '| Type |')) continue;
+            
+            if ($currentRoute) {
+                $cols = array_map('trim', explode('|', trim($line, '|')));
+                if (count($cols) >= 4) {
+                    $currentRoute['params'][] = [
+                        'name' => $cols[0],
+                        'type' => $cols[1],
+                        'req' => strtolower($cols[2]) === 'yes',
+                        'desc' => $cols[3]
+                    ];
+                }
+            }
+        }
+
+        else {
+            if ($currentRoute) {
+                $currentRoute['description'] .= $line . " ";
+            }
+        }
+    }
+
+    if ($currentRoute) $currentGroup['routes'][] = $currentRoute;
+    if ($currentGroup) $spec['groups'][] = $currentGroup;
+
+    return view('api_docs', ['spec' => $spec]);
 });
 
 require __DIR__.'/auth.php';
+
+/*
+|--------------------------------------------------------------------------
+| Authenticated Routes
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware('auth')->group(function () {
+    
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    Route::controller(ProfileController::class)->group(function () {
+        Route::get('/profile/{user:name}', 'show')->name('profile.show');
+        Route::get('/profile/{user:name}/notifications', 'notifications')->name('profile.notifications');
+        Route::get('/qr-code/{user:name}', 'generateQrCode')->name('profile.qr');
+    });
+
+    Route::controller(AccountController::class)->prefix('account')->name('account.')->group(function () {
+        Route::get('/settings', 'settings')->name('settings');
+        Route::get('/security', 'security')->name('security');
+        Route::patch('/settings/details', 'updateDetails')->name('update.details');
+        Route::put('/security/password', 'updatePassword')->name('update.password');
+    });
+
+    Route::controller(LogbookController::class)
+        ->prefix('logbook/{unit_id}/dashboard')
+        ->name('logbook.')
+        ->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/create', 'create')->name('create');
+            Route::post('/store', 'store')->name('store');
+            Route::get('/{logbook_id}/items', 'items')->name('items');
+            Route::get('/edit/{logbook_id}', 'edit')->name('edit');
+            Route::put('/update/{logbook_id}', 'update')->name('update');
+            Route::delete('/delete/{logbook_id}', 'destroy')->name('destroy');
+            Route::put('/approve/{logbook_id}', 'approve')->name('approve');
+            Route::get('/{logbook_id}/view', 'show')->name('view');
+            Route::get('/{logbook_id}/edit-content', 'editContent')->name('edit.content');
+        });
+
+    Route::controller(LogbookItemController::class)
+        ->prefix('logbook/{unit_id}/dashboard/{logbook_id}/item')
+        ->name('logbook.item.')
+        ->group(function () {
+            Route::get('/create', 'create')->name('create');
+            Route::post('/store', 'store')->name('store');
+            Route::get('/{item_id}/edit', 'edit')->name('edit');
+            Route::put('/{item_id}', 'update')->name('update');
+            Route::delete('/{item_id}', 'destroy')->name('destroy');
+        });
+
+    Route::prefix('manage')->group(function () {
+        
+        Route::controller(ToolController::class)->group(function () {
+            Route::get('/tools', 'index')->name('tools.index');
+            Route::post('/tools/update', 'update');
+            Route::post('/tools/delete', 'delete');
+        });
+
+        Route::controller(PositionController::class)->group(function () {
+            Route::get('/position', 'index')->name('position.index');
+            Route::post('/positions/update', 'update')->name('positions.update');
+            Route::post('/positions/delete', 'delete')->name('positions.delete');
+        });
+
+        Route::controller(UserController::class)->name('users.')->group(function () {
+            Route::get('/users', 'index')->name('index');
+            Route::get('/users/create', 'create')->name('create');
+            Route::post('/users', 'store')->name('store');
+            Route::get('/users/{user}', 'show')->name('show');
+            Route::get('/users/{user}/edit', 'edit')->name('edit');
+            Route::put('/users/{user}', 'update')->name('update');
+            Route::delete('/users/{user}', 'destroy')->name('destroy');
+        });
+		
+		
+		Route::controller(UnitController::class)->name('units.')->group(function () {
+            Route::get('/units', 'index')->name('index');
+            Route::post('/units', 'store')->name('store');
+            Route::put('/units/{id}', 'update')->name('update');
+            Route::delete('/units/{id}', 'destroy')->name('destroy');
+        });
+    });
+	
+	Route::controller(\App\Http\Controllers\NotificationController::class)
+        ->prefix('notifications')
+        ->name('notifications.')
+        ->group(function () {
+            Route::get('/mark-all', 'markAllAsRead')->name('markAll');
+            Route::get('/{notification}/read', 'markAsRead')->name('read');
+			Route::delete('/{id}', 'destroy')->name('destroy');
+        });
+});

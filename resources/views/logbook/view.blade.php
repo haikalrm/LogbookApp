@@ -235,10 +235,22 @@
             width: 80px;
             text-align: center;
         }
-
-        .signature-col {
+		
+		.signature-col {
             width: 95px;
-            text-align: center;
+            text-align: center !important; 
+        }
+        
+        .signature-col img {
+            /* Membuat gambar Paraf di kolom tabel berada di tengah */
+            display: block;
+            margin: 0 auto; 
+            width: 50px;
+            height: 25px;
+        }
+
+        .shift-checkbox {
+            margin: 0 5px;
         }
     </style>
 </head>
@@ -254,7 +266,6 @@
     <div id="view_pdf">
         <header>
             <div class="logo">
-                <!-- You can add logo here -->
                 <img src="/assets/img/branding/logo-small.png" alt="Logo" style="width: 70px; height: 70px;" onerror="this.style.display='none'">
             </div>
             <div class="title-container">
@@ -306,7 +317,8 @@
                 <div class="right-column">
                     <div class="info-right">
                         @php
-                            $unique_teknisi = $logbookItems->pluck('teknisi_user.name')->unique()->filter()->values()->toArray();
+                            // Mengubah ke fullname
+                            $unique_teknisi = $logbookItems->pluck('teknisi_user.fullname')->unique()->filter()->values()->toArray();
                         @endphp
                         @for($i = 0; $i < 5; $i++)
                             <p>
@@ -358,7 +370,8 @@
                         @endif
                     </td>
                     <td>{{ $item->catatan ?? '-' }}</td>
-                    <td>{{ $item->teknisi_user->name ?? 'Unknown' }}</td>
+                    {{-- Mengubah ke fullname --}}
+                    <td>{{ $item->teknisi_user->fullname ?? 'Unknown' }}</td> 
                     <td class="signature-col">
                         @if($item->teknisi_user && $item->teknisi_user->signature)
                             <img src="{{ $item->teknisi_user->signature }}" alt="Paraf Teknisi" style="width: 50px; height: 25px;">
@@ -405,7 +418,8 @@
                     @else
                         <div style="height: 80px; margin-top: 10px;"></div>
                     @endif
-                    {{ $logbook->approvedBy->name }}{{ $logbook->approvedBy->gelar ? ', ' . $logbook->approvedBy->gelar : '' }}
+                    {{-- Mengubah ke fullname --}}
+                    {{ $logbook->approvedBy->fullname }}{{ $logbook->approvedBy->gelar ? ', ' . $logbook->approvedBy->gelar : '' }}
                 </div>
             @else
                 <div class="signature-container" style="filter: blur(5px); transition: filter 0.3s ease-in-out; user-select: none; pointer-events: none;">
@@ -421,7 +435,7 @@
     </div>
 
     <script>
-        // No additional functionality needed - this is a read-only view
+        
     </script>
 </body>
 </html>

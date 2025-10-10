@@ -5,120 +5,85 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\RecentDevice;
+use Jenssegers\Agent\Agent;
 use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class AuthController extends Controller
 {
-    /**
-     * Register a new user
-     */
-    public function register(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'username' => 'required|string|max:255|unique:users',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
-            'gelar' => 'nullable|string|max:255',
-            'position' => 'nullable|integer|exists:positions,no',
-            'access_level' => 'required|in:admin,operator,viewer',
-            'phone_number' => 'nullable|string|max:20',
-            'address' => 'nullable|string',
-            'city' => 'nullable|string|max:255',
-            'state' => 'nullable|string|max:255',
-            'zip_code' => 'nullable|string|max:10',
-            'country' => 'nullable|string|max:255',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Validation failed',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        $user = User::create([
-            'name' => $request->name,
-            'gelar' => $request->gelar,
-            'username' => $request->username,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'access_level' => $request->access_level,
-            'position' => $request->position,
-            'phone_number' => $request->phone_number,
-            'address' => $request->address,
-            'city' => $request->city,
-            'state' => $request->state,
-            'zip_code' => $request->zip_code,
-            'country' => $request->country,
-            'joined' => now(),
-        ]);
-
-        $token = $user->createToken('mobile-app')->plainTextToken;
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'User registered successfully',
-            'data' => [
-                'user' => $user->load('position'),
-                'token' => $token
-            ]
-        ], 201);
-    }
-
-    /**
-     * Login user
-     */
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'login' => 'required|string', // email or username
+            'login' => 'required|string',
             'password' => 'required|string',
-            'device_name' => 'nullable|string',
-            'device_info' => 'nullable|array'
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Validation failed',
-                'errors' => $validator->errors()
-            ], 422);
+            return response()->json(['status' => 'error', 'message' => 'Validation failed'], 422);
         }
 
-        // Check if login is email or username
+        $throttleKey = 'login_api:' . $request->ip();
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Terlalu banyak percobaan login. Silakan coba lagi dalam ' . $seconds . ' detik.'
+            ], 429);
+        }
+
         $loginType = filter_var($request->login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
-        
         $user = User::where($loginType, $request->login)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
+            RateLimiter::hit($throttleKey, 60); 
+            
             return response()->json([
                 'status' => 'error',
                 'message' => 'Invalid credentials'
             ], 401);
         }
 
-        // Log recent device
-        if ($request->device_name) {
-            RecentDevice::updateOrCreate(
-                [
+        RateLimiter::clear($throttleKey);
+
+        try {
+            $agent = new Agent();
+            
+            $ip = $request->ip();
+            $userAgent = $request->userAgent();
+            $deviceType = $agent->isDesktop() ? 'Desktop' : ($agent->isPhone() ? 'Phone' : 'Tablet');
+            $platform = $agent->platform() ?: 'Unknown OS';
+            $browser = $agent->browser() ?: 'Unknown Browser';
+
+            $existingDevice = RecentDevice::where('user_id', $user->id)
+                ->where('ip_address', $ip)
+                ->where('user_agent', $userAgent)
+                ->first();
+
+            if ($existingDevice) {
+                $existingDevice->update(['last_login' => now()]);
+            } else {
+                RecentDevice::create([
                     'user_id' => $user->id,
-                    'device_name' => $request->device_name
-                ],
-                [
+                    'ip_address' => $ip,
+                    'user_agent' => $userAgent,
+                    'device_type' => $deviceType,
+                    'os' => $platform,
+                    'browser' => $browser,
+                    'country' => 'Indonesia',
                     'last_login' => now(),
-                    'device_info' => $request->device_info ? json_encode($request->device_info) : null
-                ]
-            );
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            Log::error("Gagal simpan recent device di API: " . $e->getMessage());
         }
 
-        $token = $user->createToken($request->device_name ?? 'mobile-app')->plainTextToken;
+        $tokenName = $request->device_name ?? ($platform . ' ' . $browser . ' App');
+        $token = $user->createToken($tokenName)->plainTextToken;
 
         return response()->json([
             'status' => 'success',
@@ -130,63 +95,67 @@ class AuthController extends Controller
         ]);
     }
 
-    /**
-     * Logout user
-     */
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Logged out successfully'
-        ]);
+        return response()->json(['status' => 'success', 'message' => 'Logged out successfully']);
     }
 
-    /**
-     * Get authenticated user profile
-     */
     public function profile(Request $request)
     {
         $user = $request->user()->load(['position', 'recentDevices']);
-        
-        return response()->json([
-            'status' => 'success',
-            'data' => $user
-        ]);
+        return response()->json(['status' => 'success', 'data' => $user]);
     }
 
-    /**
-     * Update user profile
-     */
     public function updateProfile(Request $request)
     {
         $user = $request->user();
         
         $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|string|max:255',
+            'fullname' => 'sometimes|string|max:255', 
             'gelar' => 'nullable|string|max:255',
             'email' => 'sometimes|string|email|max:255|unique:users,email,' . $user->id,
             'phone_number' => 'nullable|string|max:20',
             'address' => 'nullable|string',
-            'city' => 'nullable|string|max:255',
-            'state' => 'nullable|string|max:255',
-            'zip_code' => 'nullable|string|max:10',
-            'country' => 'nullable|string|max:255',
+            'city' => 'nullable|string',
+            'state' => 'nullable|string',
+            'zip_code' => 'nullable|string',
+            'country' => 'nullable|string',
+            'signature' => 'nullable|string', 
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Validation failed',
-                'errors' => $validator->errors()
-            ], 422);
+            return response()->json(['status' => 'error', 'errors' => $validator->errors()], 422);
         }
 
-        $user->update($request->only([
-            'name', 'gelar', 'email', 'phone_number', 
-            'address', 'city', 'state', 'zip_code', 'country'
-        ]));
+        $validatedData = $validator->validated();
+        
+        if ($request->has('signature')) {
+            $base64Image = $validatedData['signature'];
+			
+            if (!empty($base64Image)) {
+                $user->signature = $base64Image; 
+            } else {
+                $user->signature = null;
+            }
+        }
+        
+        if (isset($validatedData['fullname'])) {
+            $user->fullname = $validatedData['fullname'];
+            $user->name = $validatedData['fullname'];
+        }
+        
+        if (isset($validatedData['gelar'])) $user->gelar = $validatedData['gelar'];
+        if (isset($validatedData['email'])) $user->email = $validatedData['email'];
+        if (isset($validatedData['phone_number'])) $user->phone_number = $validatedData['phone_number'];
+        if (isset($validatedData['address'])) $user->address = $validatedData['address'];
+        if (isset($validatedData['city'])) $user->city = $validatedData['city'];
+        if (isset($validatedData['state'])) $user->state = $validatedData['state'];
+        if (isset($validatedData['zip_code'])) $user->zip_code = $validatedData['zip_code'];
+        if (isset($validatedData['country'])) $user->country = $validatedData['country'];
+
+
+        $user->save();
 
         return response()->json([
             'status' => 'success',
@@ -195,9 +164,6 @@ class AuthController extends Controller
         ]);
     }
 
-    /**
-     * Change password
-     */
     public function changePassword(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -206,29 +172,17 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Validation failed',
-                'errors' => $validator->errors()
-            ], 422);
+            return response()->json(['status' => 'error', 'errors' => $validator->errors()], 422);
         }
 
         $user = $request->user();
 
         if (!Hash::check($request->current_password, $user->password)) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Current password is incorrect'
-            ], 400);
+            return response()->json(['status' => 'error', 'message' => 'Current password incorrect'], 400);
         }
 
-        $user->update([
-            'password' => Hash::make($request->new_password)
-        ]);
+        $user->update(['password' => Hash::make($request->new_password)]);
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Password changed successfully'
-        ]);
+        return response()->json(['status' => 'success', 'message' => 'Password changed successfully']);
     }
 }

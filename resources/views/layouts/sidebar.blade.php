@@ -24,14 +24,6 @@
     </ul>
   </li>
 
-  <!-- Damage Data -->
-  <li class="menu-item {{ request()->is('logbook/9*') ? 'active' : '' }}">
-    <a href="{{ url('/logbook/9/dashboard') }}" class="menu-link">
-      <i class="menu-icon tf-icons ri-database-2-line"></i>
-      <div>Damage Data</div>
-    </a>
-  </li>
-
   <!-- Manage Section (Only for Staff and Admin) -->
   @if(auth()->user()->access_level >= 1)
   <li class="menu-header mt-5">
@@ -49,6 +41,12 @@
       <div>Manage Position</div>
     </a>
   </li>
+  <li class="menu-item {{ request()->is('manage/units') ? 'active' : '' }}">
+    <a href="{{ url('/manage/units') }}" class="menu-link">
+      <i class="menu-icon tf-icons ri-team-line"></i>
+      <div>Manage Units</div>
+    </a>
+  </li>
 
   <!-- User Section (Only for Staff and Admin) -->
   <li class="menu-header mt-5">
@@ -60,8 +58,28 @@
       <div>Manage Users</div>
     </a>
   </li>
+  
+  <li class="menu-header mt-5">
+    <span class="menu-header-text">API</span>
+  </li>
+  <li class="menu-item">
+    <a href="{{ url('/api-docs') }}" class="menu-link" target="_blank">
+      <i class="menu-icon tf-icons ri-database-2-line"></i>
+      <div>API Documents</div>
+    </a>
+  </li>
+  @else
+  <li class="menu-header mt-5">
+    <span class="menu-header-text">API</span>
+  </li>
+   <li class="menu-item {{ request()->is('api-tester') ? 'active' : '' }}">
+    <a href="{{ url('/api-docs') }}" class="menu-link">
+      <i class="menu-icon tf-icons ri-database-2-line"></i>
+      <div>API Documents</div>
+    </a>
+  </li>
   @endif
-
+  
   <!-- Logout -->
   <li class="menu-header mt-5">
     <span class="menu-header-text">LOGOUT</span>

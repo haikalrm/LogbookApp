@@ -14,10 +14,10 @@ class CreatePositionsTable extends Migration
     public function up()
     {
         Schema::create('positions', function (Blueprint $table) {
-            $table->integer('no')->primary(); // Gunakan 'no' sebagai primary key
-            $table->string('name', 255); // Kolom 'name' dengan panjang maksimal 255 karakter
-            $table->timestamps(); // Menambahkan kolom created_at dan updated_at
-        });
+			$table->increments('no'); // primary + auto increment
+			$table->string('name', 255);
+			$table->timestamps();
+		});
     }
 
     /**

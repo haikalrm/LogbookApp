@@ -25,7 +25,35 @@
         <div class="card mb-6">
             <h5 class="card-header">Change Password</h5>
             <div class="card-body pt-1">
-                <form id="formAccountSettings" method="POST" action="{{ route('account.update.password') }}">
+                
+                {{-- 1. TAMPILKAN ALERT SUKSES/ERROR --}}
+                @if (session('successMessage'))
+                    <div class="alert alert-success alert-dismissible mb-3" role="alert">
+                        {{ session('successMessage') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
+
+                @if (session('errorMessage'))
+                    <div class="alert alert-danger alert-dismissible mb-3" role="alert">
+                        {{ session('errorMessage') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
+
+                @if ($errors->any())
+                    <div class="alert alert-danger alert-dismissible mb-3" role="alert">
+                        <ul class="mb-0 ps-3">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
+
+                {{-- 2. GANTI ID FORM AGAR TIDAK BENTROK DENGAN JS BAWAAN TEMPLATE --}}
+                <form id="formChangePassword" method="POST" action="{{ route('account.update.password') }}">
                     @csrf
                     @method('PUT')
 
@@ -34,11 +62,16 @@
                         <div class="mb-5 col-md-6 form-password-toggle">
                             <div class="input-group input-group-merge">
                                 <div class="form-floating form-floating-outline">
-                                    <input class="form-control" type="password" name="current_password" id="currentPassword" placeholder="············" required>
+                                    {{-- Tambah class is-invalid jika error --}}
+                                    <input class="form-control @error('current_password') is-invalid @enderror" type="password" name="current_password" id="currentPassword" placeholder="············" required>
                                     <label for="currentPassword">Current Password</label>
                                 </div>
                                 <span class="input-group-text cursor-pointer"><i class="ri-eye-off-line"></i></span>
                             </div>
+                            {{-- Tampilkan error spesifik per field --}}
+                            @error('current_password')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
                         </div>
                     </div>
 
@@ -47,11 +80,14 @@
                         <div class="col-md-6 form-password-toggle">
                             <div class="input-group input-group-merge">
                                 <div class="form-floating form-floating-outline">
-                                    <input class="form-control" type="password" id="password" name="password" placeholder="············" required>
+                                    <input class="form-control @error('password') is-invalid @enderror" type="password" id="password" name="password" placeholder="············" required>
                                     <label for="password">New Password</label>
                                 </div>
                                 <span class="input-group-text cursor-pointer"><i class="ri-eye-off-line"></i></span>
                             </div>
+                            @error('password')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
                         </div>
 
                         {{-- Confirm New Password --}}
@@ -83,7 +119,7 @@
             </div>
         </div>
 
-        {{-- Recent Devices Section --}}
+        {{-- Recent Devices Section (Tidak ada perubahan) --}}
         <div class="card">
             <h6 class="card-header">Recent Devices</h6>
             <div class="table-responsive">
@@ -102,7 +138,7 @@
                             <td class="text-truncate text-heading">
                                 @php
                                     $os = strtolower($device->os);
-                                    $icon = 'ri-computer-line'; // Default icon
+                                    $icon = 'ri-computer-line'; 
                                     $color = 'text-warning';
                                     if (str_contains($os, 'windows')) { $icon = 'ri-computer-line'; $color = 'text-info'; }
                                     elseif (str_contains($os, 'android')) { $icon = 'ri-android-line'; $color = 'text-success'; }

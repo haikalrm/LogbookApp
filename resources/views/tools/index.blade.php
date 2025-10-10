@@ -2,15 +2,12 @@
 
 @section('content')
 <meta name="csrf-token" content="{{ csrf_token() }}">
-<!-- Content Wrapper -->
 <div class="container-xxl flex-grow-1 container-p-y">
-    <!-- Card for Manage Tools -->
     <div class="card">
         <div class="card-header border-bottom">
             <h5 class="card-title mb-0">Manage Tools</h5>
         </div>
         <div class="card-datatable table-responsive">
-            <!-- Data Table for Tools -->
             <table id="tools_list" class="datatables-users table">
                 <thead>
                     <tr>
@@ -42,12 +39,11 @@
                 </tbody>
             </table>
         </div>
-        <!-- Modal to Add/Edit Tool -->
         <div class="modal fade" id="new-tool" tabindex="-1" style="display: none;" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered" role="document">
                 <div class="modal-content">
                     <form id="tool_form">
-						@csrf
+                        @csrf
                         <div class="modal-header">
                             <h4 class="modal-title" id="modalCenterTitle">Tambah Peralatan Baru</h4>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -70,8 +66,8 @@
     </div>
 </div>
 
-<!-- Core JS -->
 <script src="{{ asset('assets/vendor/libs/jquery/jquery.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
 $(document).ready(function() {
@@ -132,12 +128,10 @@ $(document).ready(function() {
         ]
     });
 
-    // Add New Button
     $('.add-new').html(
         "<button class='btn btn-primary waves-effect waves-light add-new-tool' data-bs-toggle='modal' data-bs-target='#new-tool'><i class='ri-add-line me-0 me-sm-1 d-inline-block d-sm-none'></i><span class= 'd-none d-sm-inline-block'> Add New Tools </span ></button>"
     );
 
-    // Edit Tool
     $('#tools_list tbody').on('click', '.edit-tool', function () {
         var id = $(this).data('id');
         var toolName = $('#tool_name_' + id).text();
@@ -147,7 +141,6 @@ $(document).ready(function() {
         $('#new-tool').modal('show');
     });
 
-    // Add New Tool
     $('.add-new-tool').on('click', function () {
         $('#tools_name').val("");
         $('#peralatan_id').val(0);
@@ -155,7 +148,6 @@ $(document).ready(function() {
         $('#new-tool').modal('show');
     });
 
-    // Form submission for adding/editing tool
     var isSubmitting = false;
     $('#tool_form').on('submit', function (e) {
         e.preventDefault();
@@ -166,7 +158,7 @@ $(document).ready(function() {
 
         var formData = $(this).serialize();
         $.ajax({
-            url: '{{ url("/tools/update") }}', // Pastikan URL sesuai
+            url: '{{ url("/manage/tools/update") }}',
             type: 'POST',
             data: formData,
             dataType: 'json',
@@ -177,53 +169,87 @@ $(document).ready(function() {
             },
             error: function () {
                 new Notyf().error('Terjadi kesalahan, coba lagi.');
+                isSubmitting = false;
             }
         });
     });
 
     $('#tools_list').on('click', '.delete-tool', function () {
-		var toolId = $(this).data('id');  // Ambil ID peralatan yang ingin dihapus
-		var $row = $(this).closest('tr');
-		var table = $('#tools_list').DataTable();
-		var currentPage = table.page();
-		var recordsOnPage = table.rows({ page: 'current' }).count();
+        var toolId = $(this).data('id');
+        var $row = $(this).closest('tr');
+        var table = $('#tools_list').DataTable();
+        var currentPage = table.page();
+        var recordsOnPage = table.rows({ page: 'current' }).count();
 
-		if (confirm('Apakah Anda yakin ingin menghapus peralatan ini?')) {
-			$.ajax({
-				url: '/tools/delete',  // URL yang mengarah ke route delete
-				type: 'POST',
-				data: {
-					peralatan_id: toolId,
-					_token: $('meta[name="csrf-token"]').attr('content')  // CSRF Token
-				},
-				dataType: 'json',
-				success: function(response) {
-					if (response.success) {
-						new Notyf().success(response.message);
-						
-						// Hapus baris dari tabel (remove)
-						$('tr[data-id="' + toolId + '"]').remove();
-						
-						table.row($row).remove().draw(false);
-						// Perbarui nomor urut
-						table.rows().every(function (rowIdx, tableLoop, rowLoop) {
-							this.cell(rowIdx, 0).data(rowIdx + 1); // Update nomor urut
-						}).draw(false);
+        Swal.fire({
+            title: 'Apakah Anda yakin?',
+            text: "Data peralatan ini akan dihapus permanen!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Hapus!',
+            cancelButtonText: 'Batal',
+            customClass: {
+                confirmButton: 'btn btn-primary me-3',
+                cancelButton: 'btn btn-label-secondary'
+            },
+            buttonsStyling: false
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: '/manage/tools/delete',
+                    type: 'POST',
+                    data: {
+                        peralatan_id: toolId,
+                        _token: $('meta[name="csrf-token"]').attr('content')
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Terhapus!',
+                                text: response.message,
+                                customClass: {
+                                    confirmButton: 'btn btn-success'
+                                }
+                            });
+                            
+                            $('tr[data-id="' + toolId + '"]').remove();
+                            
+                            table.row($row).remove().draw(false);
+                            
+                            table.rows().every(function (rowIdx, tableLoop, rowLoop) {
+                                this.cell(rowIdx, 0).data(rowIdx + 1);
+                            }).draw(false);
 
-						// Pindah ke halaman sebelumnya jika halaman saat ini kosong setelah penghapusan
-						if (recordsOnPage === 1 && currentPage > 0) {
-							table.page(currentPage - 1).draw('page');
-						}
-					} else {
-						new Notyf().error(response.message);
-					}
-				},
-				error: function() {
-					new Notyf().error('Terjadi kesalahan, coba lagi.');
-				}
-			});
-		}
-	});
+                            if (recordsOnPage === 1 && currentPage > 0) {
+                                table.page(currentPage - 1).draw('page');
+                            }
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Gagal!',
+                                text: response.message,
+                                customClass: {
+                                    confirmButton: 'btn btn-danger'
+                                }
+                            });
+                        }
+                    },
+                    error: function() {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: 'Terjadi kesalahan sistem.',
+                            customClass: {
+                                confirmButton: 'btn btn-danger'
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    });
 });
 </script>
 @endsection

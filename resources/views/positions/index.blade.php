@@ -2,6 +2,7 @@
 @section('title', 'Manage Positions')
 
 @section('content')
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <div class="card">
   <div class="card-header border-bottom">
     <h5 class="card-title mb-0">Manage Positions</h5>
@@ -42,7 +43,6 @@
   </div>
 </div>
 
-{{-- Modal --}}
 <div class="modal fade" id="new-position" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
@@ -73,6 +73,7 @@
 @endsection
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 $(document).ready(function() {
   var dt_user_table = $('#position_list').DataTable({
@@ -110,12 +111,10 @@ $(document).ready(function() {
     ]
   });
 
-  // Tambah tombol "Add New"
   $('.add-new').html(
     "<button class='btn btn-primary add-new-position' data-bs-toggle='modal' data-bs-target='#new-position'><i class='ri-add-line me-0 me-sm-1 d-inline-block d-sm-none'></i><span class='d-none d-sm-inline-block'>Add New Positions</span></button>"
   );
 
-  // Edit
   $('#position_list').on('click', '.edit-position', function () {
     var id = $(this).data('id');
     var positionName = $('#position_name_' + id).text();
@@ -125,45 +124,102 @@ $(document).ready(function() {
     $('#new-position').modal('show');
   });
 
-  // Reset form saat Add
   $(document).on('click', '.add-new-position', function () {
     $('#position_name').val("");
     $('#position_id').val(0);
     $('#modalCenterTitle').text('Tambah Jabatan Baru');
   });
 
-  // Submit form (tambah/edit)
+  var isSubmitting = false;
   $('#position_form').on('submit', function (e) {
     e.preventDefault();
+    if(isSubmitting) return;
+    isSubmitting = true;
+
     var formData = $(this).serialize();
-    $.post("{{ route('positions.update') }}", formData, function(data){
-      if(data.success){
-        location.reload();
-      } else {
-        new Notyf().error(data.message);
+    $.ajax({
+      url: "{{ route('positions.update') }}",
+      type: 'POST',
+      data: formData,
+      dataType: 'json',
+      success: function(data){
+        if(data.success){
+          location.reload();
+        } else {
+          new Notyf().error(data.message);
+        }
+      },
+      error: function() {
+        new Notyf().error('Terjadi kesalahan sistem.');
+      },
+      complete: function() {
+        isSubmitting = false;
       }
-    }, 'json');
+    });
   });
 
-  // Hapus
   $('#position_list').on('click', '.delete-position', function () {
-		if (confirm('Yakin ingin menghapus?')) {
-			$.post("{{ route('positions.delete') }}", {
-				_token: '{{ csrf_token() }}',
-				position_id: $(this).data('id')
-			}, function(data){
-				console.log(data);
-				if(data.success) {
-					location.reload();
-				} else {
-					new Notyf().error(data.message);
-				}
-			}, 'json').fail(function(xhr, status, error) {
-				console.error("AJAX request failed: " + status + ", " + error);
-				new Notyf().error('Gagal menghapus posisi.');
-			});
-		}
-	});
+    var id = $(this).data('id');
+    var $row = $(this).closest('tr');
+    var table = $('#position_list').DataTable();
+
+    Swal.fire({
+      title: 'Yakin ingin menghapus?',
+      text: "Data jabatan ini akan dihapus permanen!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Ya, Hapus!',
+      cancelButtonText: 'Batal',
+      customClass: {
+        confirmButton: 'btn btn-primary me-3',
+        cancelButton: 'btn btn-label-secondary'
+      },
+      buttonsStyling: false
+    }).then((result) => {
+      if (result.isConfirmed) {
+        $.ajax({
+          url: "{{ route('positions.delete') }}",
+          type: 'POST',
+          data: {
+            _token: '{{ csrf_token() }}',
+            position_id: id
+          },
+          dataType: 'json',
+          success: function(data) {
+            if(data.success) {
+              Swal.fire({
+                icon: 'success',
+                title: 'Terhapus!',
+                text: 'Jabatan berhasil dihapus.',
+                customClass: { confirmButton: 'btn btn-success' }
+              });
+              
+              table.row($row).remove().draw(false);
+              
+              table.rows().every(function (rowIdx, tableLoop, rowLoop) {
+                  this.cell(rowIdx, 0).data(rowIdx + 1);
+              }).draw(false);
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'Gagal!',
+                text: data.message,
+                customClass: { confirmButton: 'btn btn-danger' }
+              });
+            }
+          },
+          error: function() {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error!',
+              text: 'Gagal menghapus posisi.',
+              customClass: { confirmButton: 'btn btn-danger' }
+            });
+          }
+        });
+      }
+    });
+  });
 });
 </script>
 @endpush

@@ -23,5 +23,12 @@ class DatabaseSeeder extends Seeder
         $this->call([
             UserSeeder::class, // Menambahkan UserSeeder
         ]);
+		//Memanggil PeralatanSeeder
+		$this->call([
+			PeralatanSeeder::class,
+		]);
+		$this->call([
+			PosisiSeeder::class,
+		]);
     }
 }

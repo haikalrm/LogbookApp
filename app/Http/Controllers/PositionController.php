@@ -4,102 +4,110 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Position;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 
 class PositionController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $positions = Position::paginate(10);
-        return view('positions.index', compact('positions'));
+        try {
+            $positions = Position::paginate(10);
+            
+            if ($request->wantsJson()) {
+                 return response()->json(['success' => true, 'data' => $positions]);
+            }
+
+            return view('positions.index', compact('positions'));
+        } catch (\Exception $e) {
+             return back()->with('errorMessage', 'Gagal memuat data jabatan.');
+        }
     }
 
     public function update(Request $request)
     {
-        // Validasi input
-        $validator = validator($request->all(), [
-            'position_name' => 'required|string|max:255',
-            'position_id' => 'required|integer', // Validasi position_id
-        ]);
-
-        // Jika validasi gagal
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validasi gagal: ' . $validator->errors()->first()
+        try {
+			if (auth()->user()->access_level != 2) {
+                if ($request->wantsJson()) return response()->json(['success' => false, 'message' => 'Forbidden'], 403);
+                return back()->with('errorMessage', 'Hanya admin yang boleh mengubah jabatan.');
+            }
+            $validator = Validator::make($request->all(), [
+                'position_name' => 'required|string|max:255',
+                'position_id' => 'required|integer',
             ]);
-        }
 
-        // Jika position_id > 0, lakukan update, jika tidak maka buat posisi baru
-        if ($request->position_id > 0) {
-            // Update posisi yang ada
-            $position = Position::find($request->position_id);
-
-            if (!$position) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Posisi tidak ditemukan.'
-                ]);
+            if ($validator->fails()) {
+                if ($request->wantsJson()) {
+                    return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
+                }
+                return back()->with('errorMessage', $validator->errors()->first());
             }
 
-            $position->name = $request->position_name;
-            if ($position->save()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Posisi berhasil diperbarui.'
-                ]);
+            if ($request->position_id > 0) {
+                $position = Position::find($request->position_id);
+                if (!$position) {
+                    throw new \Exception('Posisi tidak ditemukan');
+                }
+                $position->name = $request->position_name;
+                $position->save();
+                $message = 'Posisi berhasil diperbarui.';
             } else {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Gagal memperbarui posisi.'
-                ]);
+                $position = new Position();
+                $position->name = $request->position_name;
+                $position->save();
+                $message = 'Posisi baru berhasil ditambahkan.';
             }
-        } else {
-            // Jika position_id = 0, buat posisi baru
-            $position = new Position();
-            $position->name = $request->position_name;
 
-            if ($position->save()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Posisi baru berhasil ditambahkan.'
-                ]);
-            } else {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Gagal menambahkan posisi.'
-                ]);
+            if ($request->wantsJson()) {
+                return response()->json(['success' => true, 'message' => $message]);
             }
+
+            return back()->with('successMessage', $message);
+
+        } catch (\Exception $e) {
+            Log::error('Position Update Error: ' . $e->getMessage());
+            
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            }
+            return back()->with('errorMessage', 'Gagal menyimpan data: ' . $e->getMessage());
         }
     }
 
     public function delete(Request $request)
     {
-        $validator = validator($request->all(), [
-            'position_id' => 'required|integer|exists:positions,no',
-        ]);
-
-        if ($validator->fails()) {
-            session()->flash('errorMessage', 'Posisi tidak ditemukan');
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Posisi tidak ditemukan'
+        try {
+			if (auth()->user()->access_level != 2) {
+                if ($request->wantsJson()) return response()->json(['success' => false, 'message' => 'Forbidden'], 403);
+                return back()->with('errorMessage', 'Hanya admin yang boleh mengubah jabatan.');
+            }
+            $validator = Validator::make($request->all(), [
+                'position_id' => 'required|integer|exists:positions,no',
             ]);
-        }
 
-        $position = Position::find($request->position_id);
-        if ($position && $position->delete()) {
-            session()->flash('successMessage', 'Posisi berhasil dihapus');
+            if ($validator->fails()) {
+                if ($request->wantsJson()) {
+                    return response()->json(['success' => false, 'message' => 'Posisi tidak ditemukan'], 404);
+                }
+                return back()->with('errorMessage', 'Posisi tidak ditemukan.');
+            }
+
+            $position = Position::find($request->position_id);
+            $position->delete();
+
+            if ($request->wantsJson()) {
+                return response()->json(['success' => true, 'message' => 'Posisi berhasil dihapus']);
+            }
+
+            return back()->with('successMessage', 'Posisi berhasil dihapus');
+
+        } catch (\Exception $e) {
+            Log::error('Position Delete Error: ' . $e->getMessage());
             
-            return response()->json([
-                'success' => true,
-                'message' => 'Posisi berhasil dihapus'
-            ]);
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            }
+            return back()->with('errorMessage', 'Gagal menghapus data.');
         }
-
-        return response()->json([
-            'success' => false,
-            'message' => 'Gagal menghapus posisi'
-        ]);
     }
 }

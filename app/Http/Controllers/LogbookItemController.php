@@ -1,233 +1,225 @@
 <?php
 
-// app/Http/Controllers/LogbookItemController.php
-
 namespace App\Http\Controllers;
 
 use App\Models\LogbookItem;
 use App\Models\Logbook;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Validator;
 
 class LogbookItemController extends Controller
 {
-    public function create($unit_id, $logbook_id)
+    public function index(Request $request, $unit_id, $logbook_id)
     {
-        $logbook = Logbook::findOrFail($logbook_id);
-        // Hitung nomor urut berikutnya berdasarkan jumlah item yang ada
-        $next_report_number = LogbookItem::where('logbook_id', $logbook_id)->count() + 1;
-        return view('logbook_items.create', compact('logbook', 'unit_id', 'next_report_number'));
+        try {
+            $logbook = Logbook::find($logbook_id);
+            if (!$logbook) {
+                if ($request->wantsJson()) {
+                    return response()->json(['success' => false, 'message' => 'Logbook tidak ditemukan'], 404);
+                }
+                return back()->with('errorMessage', 'Logbook tidak ditemukan');
+            }
+
+            $query = LogbookItem::with('teknisi_user')
+                        ->where('logbook_id', $logbook_id);
+
+            if ($request->has('item_id') && !empty($request->item_id)) {
+                $query->where('id', $request->item_id);
+            }
+
+            $items = $query->orderBy('created_at', 'asc')->get();
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'count' => $items->count(),
+                    'data' => $items
+                ]);
+            }
+            
+            return redirect()->route('logbook.edit.content', ['unit_id' => $unit_id, 'logbook_id' => $logbook_id]);
+
+        } catch (\Exception $e) {
+            if ($request->wantsJson()) return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            return back()->with('errorMessage', 'Gagal memuat items.');
+        }
     }
 
     public function store(Request $request, $unit_id, $logbook_id)
     {
-        // Cek apakah sudah mencapai batas maksimal 5 items
-        $currentItemsCount = LogbookItem::where('logbook_id', $logbook_id)->count();
-        if ($currentItemsCount >= 5) {
-            return redirect()->back()->with('errorMessage', 'Maksimal 5 content per logbook sudah tercapai!');
-        }
-
         try {
-            Log::info('LogbookItem Store Started:', [
-                'unit_id' => $unit_id,
-                'logbook_id' => $logbook_id,
-                'request_data' => $request->all()
-            ]);
-            
-            $validated = $request->validate([
-                // 'judul' => 'required|string|min:5|max:255',
-                'catatan' => 'required|string|min:10|max:1000',
+            $logbook = Logbook::find($logbook_id);
+            if (!$logbook) {
+                if ($request->wantsJson()) return response()->json(['success' => false, 'message' => 'Logbook induk tidak ditemukan'], 404);
+                return back()->with('errorMessage', 'Logbook tidak ditemukan');
+            }
+
+            $currentItemsCount = LogbookItem::where('logbook_id', $logbook_id)->count();
+            if ($currentItemsCount >= 10) {
+                if ($request->wantsJson()) {
+                    return response()->json(['success' => false, 'message' => 'Maksimal 10 item per logbook.'], 422);
+                }
+                return redirect()->back()->with('errorMessage', 'Maksimal 10 content per logbook sudah tercapai!');
+            }
+
+            $validator = Validator::make($request->all(), [
+                'catatan' => 'required|string|min:5|max:1000',
                 'tanggal_kegiatan' => 'required|date',
                 'tools' => 'required|string|max:255',
                 'teknisi' => 'required|integer|exists:users,id',
-                'mulai' => 'required|date_format:Y-m-d\TH:i',
-                'selesai' => 'required|date_format:Y-m-d\TH:i|after:mulai',
+                'mulai' => 'required',
+                'selesai' => 'required',
             ]);
-            
-            Log::info('Validation passed:', ['validated' => $validated]);
+
+            if ($validator->fails()) {
+                if ($request->wantsJson()) {
+                    return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+                }
+                return back()->with('errorMessage', $validator->errors()->first())->withInput();
+            }
 
             $logbookItem = new LogbookItem();
             $logbookItem->logbook_id = $logbook_id;
-            // $logbookItem->judul = $validated['judul'];
-            $logbookItem->catatan = $validated['catatan'];
-            $logbookItem->tanggal_kegiatan = $validated['tanggal_kegiatan'];
-            $logbookItem->tools = $validated['tools'];
-            $logbookItem->teknisi = $validated['teknisi'];
-            $logbookItem->mulai = $validated['mulai'];
-            $logbookItem->selesai = $validated['selesai'];
-            $saved = $logbookItem->save();
-            
-            // Debug
-            Log::info('LogbookItem Store Debug:', [
-                'saved' => $saved,
-                'item_id' => $logbookItem->id,
-                'logbook_id' => $logbook_id,
-                'data' => $validated
-            ]);
+            $logbookItem->catatan = $request->catatan;
+            $logbookItem->tanggal_kegiatan = $request->tanggal_kegiatan;
+            $logbookItem->tools = $request->tools;
+            $logbookItem->teknisi = $request->teknisi;
+            $logbookItem->mulai = $request->mulai;
+            $logbookItem->selesai = $request->selesai;
+            $logbookItem->save();
 
             Cache::forget('logbook_items_' . $logbook_id);
 
-            // Check if it's an AJAX request
-            if ($request->ajax()) {
+            if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Item logbook berhasil ditambahkan!',
-                    'item' => $logbookItem
-                ]);
+                    'message' => 'Item berhasil ditambahkan',
+                    'data' => $logbookItem
+                ], 201);
             }
 
             return redirect()->route('logbook.edit.content', ['unit_id' => $unit_id, 'logbook_id' => $logbook_id])
                              ->with('successMessage', 'Item logbook berhasil ditambahkan!');
 
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            Log::error('Validation Error Details:', [
-                'errors' => $e->errors(),
-                'messages' => $e->getMessage(),
-                'request_data' => $request->all()
-            ]);
-            
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Terjadi kesalahan validasi data.',
-                    'errors' => $e->errors()
-                ], 422);
-            }
-            
-            return redirect()->back()
-                           ->withErrors($e->errors())
-                           ->withInput()
-                           ->with('errorMessage', 'Terjadi kesalahan validasi data.');
         } catch (\Exception $e) {
-            Log::error('Store LogbookItem Error:', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'request_data' => $request->all()
-            ]);
+            Log::error('Store Item Error: ' . $e->getMessage());
             
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Terjadi kesalahan saat menyimpan data.',
-                    'error' => $e->getMessage()
-                ], 500);
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Gagal menyimpan: ' . $e->getMessage()], 500);
             }
-            
-            return redirect()->back()
-                           ->withInput()
-                           ->with('errorMessage', 'Terjadi kesalahan saat menyimpan data.');
+            return redirect()->back()->withInput()->with('errorMessage', 'Terjadi kesalahan sistem.');
         }
-    }
-
-    public function edit($unit_id, $logbook_id, $item_id)
-    {
-        $logbook = Logbook::findOrFail($logbook_id);
-        $logbookItem = LogbookItem::where('logbook_id', $logbook_id)->findOrFail($item_id);
-        return view('logbook_items.edit', compact('logbook', 'logbookItem', 'unit_id'));
     }
 
     public function update(Request $request, $unit_id, $logbook_id, $item_id)
     {
         try {
-            $validated = $request->validate([
-                // 'judul' => 'required|string|min:5|max:255',
-                'catatan' => 'required|string|min:10|max:1000',
+            $logbookItem = LogbookItem::where('logbook_id', $logbook_id)->find($item_id);
+            if (!$logbookItem) {
+                if ($request->wantsJson()) return response()->json(['success' => false, 'message' => 'Item tidak ditemukan'], 404);
+                return back()->with('errorMessage', 'Item tidak ditemukan');
+            }
+
+            $validator = Validator::make($request->all(), [
+                'catatan' => 'required|string|min:5|max:1000',
                 'tanggal_kegiatan' => 'required|date',
                 'tools' => 'required|string|max:255',
                 'teknisi' => 'required|integer|exists:users,id',
-                'mulai' => 'required|date',
-                'selesai' => 'required|date|after_or_equal:mulai',
+                'mulai' => 'required',
+                'selesai' => 'required',
             ]);
 
-            $logbookItem = LogbookItem::where('logbook_id', $logbook_id)->findOrFail($item_id);
-            // $logbookItem->judul = $validated['judul'];
-            $logbookItem->catatan = $validated['catatan'];
-            $logbookItem->tanggal_kegiatan = $validated['tanggal_kegiatan'];
-            $logbookItem->tools = $validated['tools'];
-            $logbookItem->teknisi = $validated['teknisi'];
-            $logbookItem->mulai = $validated['mulai'];
-            $logbookItem->selesai = $validated['selesai'];
-            $logbookItem->save();
+            if ($validator->fails()) {
+                if ($request->wantsJson()) return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+                return back()->with('errorMessage', $validator->errors()->first());
+            }
 
-            // Clear cache
+            $logbookItem->update([
+                'catatan' => $request->catatan,
+                'tanggal_kegiatan' => $request->tanggal_kegiatan,
+                'tools' => $request->tools,
+                'teknisi' => $request->teknisi,
+                'mulai' => $request->mulai,
+                'selesai' => $request->selesai
+            ]);
+
             Cache::forget('logbook_items_' . $logbook_id);
 
-            // Check if it's an AJAX request
-            if ($request->ajax()) {
+            if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Item logbook berhasil diperbarui!',
-                    'item' => $logbookItem
+                    'message' => 'Item berhasil diperbarui',
+                    'data' => $logbookItem
                 ]);
             }
 
-            return redirect()->route('logbook.view', ['unit_id' => $unit_id, 'logbook_id' => $logbook_id])
+            return redirect()->route('logbook.edit.content', ['unit_id' => $unit_id, 'logbook_id' => $logbook_id])
                              ->with('successMessage', 'Item logbook berhasil diperbarui!');
                              
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Terjadi kesalahan validasi data.',
-                    'errors' => $e->errors()
-                ], 422);
-            }
-            
-            return redirect()->back()
-                           ->withErrors($e->errors())
-                           ->withInput();
-                           
         } catch (\Exception $e) {
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Terjadi kesalahan saat mengupdate data.',
-                    'error' => $e->getMessage()
-                ], 500);
-            }
-            
-            return redirect()->back()
-                           ->withInput()
-                           ->with('errorMessage', 'Terjadi kesalahan saat mengupdate data.');
+            if ($request->wantsJson()) return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            return back()->with('errorMessage', 'Gagal update data.');
         }
     }
 
-    public function destroy($unit_id, $logbook_id, $item_id)
+    public function destroy(Request $request, $unit_id, $logbook_id, $item_id)
     {
         try {
-            $logbookItem = LogbookItem::where('logbook_id', $logbook_id)->findOrFail($item_id);
-            
-            // Log the delete action
-            Log::info('LogbookItem Delete:', [
-                'item_id' => $item_id,
-                'logbook_id' => $logbook_id,
-                'unit_id' => $unit_id,
-                // 'judul' => $logbookItem->judul
-            ]);
-            
-            $logbookItem->delete();
+            $user = $request->user();
 
-            // Clear cache
+            $logbookItem = LogbookItem::where('logbook_id', $logbook_id)->find($item_id);
+            
+            if (!$logbookItem) {
+                return response()->json(['success' => false, 'message' => 'Item tidak ditemukan'], 404);
+            }
+
+            $isAdmin = $user->access_level == 2;
+            $isAuthorItem = $logbookItem->teknisi == $user->id;
+            
+            $logbook = Logbook::find($logbook_id);
+            $isLogbookCreator = $logbook && $logbook->created_by == $user->id;
+
+            if (!$isAdmin && !$isAuthorItem && !$isLogbookCreator) {
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'Unauthorized. Anda tidak memiliki izin menghapus item ini.'
+                ], 403);
+            }
+            // ---------------------
+
+            $logbookItem->delete();
             Cache::forget('logbook_items_' . $logbook_id);
 
             return response()->json([
                 'success' => true, 
-                'message' => 'Logbook item berhasil dihapus!'
+                'message' => 'Item berhasil dihapus!'
             ]);
             
         } catch (\Exception $e) {
-            Log::error('Delete LogbookItem Error:', [
-                'message' => $e->getMessage(),
-                'item_id' => $item_id,
-                'logbook_id' => $logbook_id,
-                'unit_id' => $unit_id
-            ]);
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Terjadi kesalahan saat menghapus data.'
-            ], 500);
+            return response()->json(['success' => false, 'message' => 'Gagal menghapus: ' . $e->getMessage()], 500);
+        }
+    }
+    
+    public function getByTeknisi(Request $request) {
+        try {
+            $userId = $request->user()->id;
+            $items = LogbookItem::where('teknisi', $userId)->with(['logbook.unit'])->latest()->paginate(10);
+            return response()->json(['success' => true, 'data' => $items]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+    
+    public function teknisiSummary(Request $request) {
+        try {
+            $userId = $request->user()->id;
+            $totalTasks = LogbookItem::where('teknisi', $userId)->count();
+            return response()->json(['success' => true, 'data' => ['total_tasks' => $totalTasks]]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
 }
