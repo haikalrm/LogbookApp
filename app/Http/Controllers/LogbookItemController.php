@@ -36,7 +36,7 @@ class LogbookItemController extends Controller
             ]);
             
             $validated = $request->validate([
-                'judul' => 'required|string|min:5|max:255',
+                // 'judul' => 'required|string|min:5|max:255',
                 'catatan' => 'required|string|min:10|max:1000',
                 'tanggal_kegiatan' => 'required|date',
                 'tools' => 'required|string|max:255',
@@ -49,7 +49,7 @@ class LogbookItemController extends Controller
 
             $logbookItem = new LogbookItem();
             $logbookItem->logbook_id = $logbook_id;
-            $logbookItem->judul = $validated['judul'];
+            // $logbookItem->judul = $validated['judul'];
             $logbookItem->catatan = $validated['catatan'];
             $logbookItem->tanggal_kegiatan = $validated['tanggal_kegiatan'];
             $logbookItem->tools = $validated['tools'];
@@ -131,7 +131,7 @@ class LogbookItemController extends Controller
     {
         try {
             $validated = $request->validate([
-                'judul' => 'required|string|min:5|max:255',
+                // 'judul' => 'required|string|min:5|max:255',
                 'catatan' => 'required|string|min:10|max:1000',
                 'tanggal_kegiatan' => 'required|date',
                 'tools' => 'required|string|max:255',
@@ -141,7 +141,7 @@ class LogbookItemController extends Controller
             ]);
 
             $logbookItem = LogbookItem::where('logbook_id', $logbook_id)->findOrFail($item_id);
-            $logbookItem->judul = $validated['judul'];
+            // $logbookItem->judul = $validated['judul'];
             $logbookItem->catatan = $validated['catatan'];
             $logbookItem->tanggal_kegiatan = $validated['tanggal_kegiatan'];
             $logbookItem->tools = $validated['tools'];
@@ -203,7 +203,7 @@ class LogbookItemController extends Controller
                 'item_id' => $item_id,
                 'logbook_id' => $logbook_id,
                 'unit_id' => $unit_id,
-                'judul' => $logbookItem->judul
+                // 'judul' => $logbookItem->judul
             ]);
             
             $logbookItem->delete();

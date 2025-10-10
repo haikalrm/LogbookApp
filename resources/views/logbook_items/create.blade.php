@@ -18,16 +18,6 @@
                     
                     <div class="row">
                         <div class="col-md-12 mb-3">
-                            <label for="judul" class="form-label">Judul Kegiatan <span class="text-danger">*</span></label>
-                            <input type="text" name="judul" id="judul" class="form-control" placeholder="Masukkan judul kegiatan..." value="{{ old('judul') }}" required>
-                            @error('judul')
-                                <div class="text-danger">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-12 mb-3">
                             <label for="catatan" class="form-label">Catatan Kegiatan <span class="text-danger">*</span></label>
                             <textarea name="catatan" id="catatan" class="form-control" rows="4" placeholder="Masukkan detail kegiatan..." required>{{ old('catatan') }}</textarea>
                             @error('catatan')

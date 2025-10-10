@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('logbook_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('logbook_id')->constrained('logbooks')->onDelete('cascade');
-            $table->string('judul');
+            // $table->string('judul');
             $table->text('catatan');
             $table->date('tanggal_kegiatan');
             $table->string('tools');

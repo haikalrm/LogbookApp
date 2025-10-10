@@ -65,7 +65,6 @@ class LogbookItemController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'logbook_id' => 'required|exists:logbooks,id',
-            'judul' => 'required|string|max:255',
             'catatan' => 'nullable|string',
             'tanggal_kegiatan' => 'required|date',
             'mulai' => 'required|date_format:H:i',
@@ -144,7 +143,6 @@ class LogbookItemController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'judul' => 'sometimes|string|max:255',
             'catatan' => 'nullable|string',
             'tanggal_kegiatan' => 'sometimes|date',
             'mulai' => 'sometimes|date_format:H:i',
