@@ -11,7 +11,6 @@ class LogbookItem extends Model
 
     protected $fillable = [
         'logbook_id', 
-        'judul',
         'catatan',
         'tanggal_kegiatan',
         'tools',
