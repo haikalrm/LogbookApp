@@ -12,15 +12,9 @@ use App\Http\Controllers\PositionController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UnitController;
 
-/*
-|--------------------------------------------------------------------------
-| Public Routes
-|--------------------------------------------------------------------------
-*/
-
 Route::get('/', fn () => view('welcome'));
 
-Route::get('/api-docs', function () {
+Route::middleware('throttle:60,1')->get('/api-docs', function () {
     $path = resource_path('docs/api_v1.md');
     if (!file_exists($path)) abort(404, 'File api.md not found');
 
@@ -36,8 +30,8 @@ Route::get('/api-docs', function () {
         if (empty($line)) continue;
 
         if (str_starts_with($line, '# ') && !str_starts_with($line, '##')) {
-            if ($currentRoute) $currentGroup['routes'][] = $currentRoute; // Save prev route
-            if ($currentGroup) $spec['groups'][] = $currentGroup; // Save prev group
+            if ($currentRoute) $currentGroup['routes'][] = $currentRoute;
+            if ($currentGroup) $spec['groups'][] = $currentGroup;
             
             $currentGroup = [
                 'name' => trim(substr($line, 2)),
@@ -47,7 +41,7 @@ Route::get('/api-docs', function () {
         }
         
         elseif (str_starts_with($line, '## [')) {
-            if ($currentRoute) $currentGroup['routes'][] = $currentRoute; // Save prev route
+            if ($currentRoute) $currentGroup['routes'][] = $currentRoute;
 
             preg_match('/\[(GET|POST|PUT|DELETE|PATCH)\]\s+(\S+)(.*)/', $line, $matches);
             $isPublic = str_contains(strtolower($matches[3] ?? ''), 'public');
@@ -98,13 +92,7 @@ Route::get('/api-docs', function () {
 
 require __DIR__.'/auth.php';
 
-/*
-|--------------------------------------------------------------------------
-| Authenticated Routes
-|--------------------------------------------------------------------------
-*/
-
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'throttle:100,1'])->group(function () {
     
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -117,6 +105,7 @@ Route::middleware('auth')->group(function () {
     Route::controller(AccountController::class)->prefix('account')->name('account.')->group(function () {
         Route::get('/settings', 'settings')->name('settings');
         Route::get('/security', 'security')->name('security');
+        Route::get('/notifications', 'notifications')->name('notifications');
         Route::patch('/settings/details', 'updateDetails')->name('update.details');
         Route::put('/security/password', 'updatePassword')->name('update.password');
     });
@@ -171,22 +160,21 @@ Route::middleware('auth')->group(function () {
             Route::put('/users/{user}', 'update')->name('update');
             Route::delete('/users/{user}', 'destroy')->name('destroy');
         });
-		
-		
-		Route::controller(UnitController::class)->name('units.')->group(function () {
+        
+        Route::controller(UnitController::class)->name('units.')->group(function () {
             Route::get('/units', 'index')->name('index');
             Route::post('/units', 'store')->name('store');
             Route::put('/units/{id}', 'update')->name('update');
             Route::delete('/units/{id}', 'destroy')->name('destroy');
         });
     });
-	
-	Route::controller(\App\Http\Controllers\NotificationController::class)
+    
+    Route::controller(\App\Http\Controllers\NotificationController::class)
         ->prefix('notifications')
         ->name('notifications.')
         ->group(function () {
             Route::get('/mark-all', 'markAllAsRead')->name('markAll');
             Route::get('/{notification}/read', 'markAsRead')->name('read');
-			Route::delete('/{id}', 'destroy')->name('destroy');
+            Route::delete('/{id}', 'destroy')->name('destroy');
         });
 });
