@@ -10,9 +10,17 @@ class Position extends Model
     use HasFactory;
 
     protected $table = 'positions';
-    protected $primaryKey = 'no';
+    protected $primaryKey = 'id';
     public $incrementing = true;
     protected $keyType = 'int';
     public $timestamps = true;
-    protected $fillable = ['name'];
+    protected $fillable = ['name', 'user_id'];
+
+    /**
+     * Get the user that owns the position.
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id');
+    }
 }

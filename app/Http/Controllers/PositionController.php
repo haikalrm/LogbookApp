@@ -27,10 +27,11 @@ class PositionController extends Controller
     public function update(Request $request)
     {
         try {
-			if (auth()->user()->access_level != 2) {
+            if (auth()->user()->access_level != 2) {
                 if ($request->wantsJson()) return response()->json(['success' => false, 'message' => 'Forbidden'], 403);
                 return back()->with('errorMessage', 'Hanya admin yang boleh mengubah jabatan.');
             }
+
             $validator = Validator::make($request->all(), [
                 'position_name' => 'required|string|max:255',
                 'position_id' => 'required|integer',
@@ -46,14 +47,18 @@ class PositionController extends Controller
             if ($request->position_id > 0) {
                 $position = Position::find($request->position_id);
                 if (!$position) {
-                    throw new \Exception('Posisi tidak ditemukan');
+                    return response()->json(['success' => false, 'message' => 'Posisi tidak ditemukan'], 404);
                 }
                 $position->name = $request->position_name;
+                
                 $position->save();
                 $message = 'Posisi berhasil diperbarui.';
             } else {
                 $position = new Position();
                 $position->name = $request->position_name;
+                
+                $position->user_id = auth()->id();
+                
                 $position->save();
                 $message = 'Posisi baru berhasil ditambahkan.';
             }
@@ -68,9 +73,9 @@ class PositionController extends Controller
             Log::error('Position Update Error: ' . $e->getMessage());
             
             if ($request->wantsJson()) {
-                return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+                return response()->json(['success' => false, 'message' => 'Gagal menyimpan: ' . $e->getMessage()], 500);
             }
-            return back()->with('errorMessage', 'Gagal menyimpan data: ' . $e->getMessage());
+            return back()->with('errorMessage', 'Gagal menyimpan data.');
         }
     }
 
@@ -82,7 +87,7 @@ class PositionController extends Controller
                 return back()->with('errorMessage', 'Hanya admin yang boleh mengubah jabatan.');
             }
             $validator = Validator::make($request->all(), [
-                'position_id' => 'required|integer|exists:positions,no',
+                'position_id' => 'required|integer|exists:positions,id',
             ]);
 
             if ($validator->fails()) {

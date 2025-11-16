@@ -41,7 +41,7 @@ class UserController extends Controller
             abort(403, 'Access denied. Only Staff and Admin can manage users.');
         }
         
-        $users = User::with('position')->paginate(10);
+        $users = User::with('positions')->paginate(10);
         $positions = Position::all();
         
         $users->getCollection()->makeHidden(['password', 'remember_token']);
@@ -56,7 +56,11 @@ class UserController extends Controller
     public function edit($id)
     {
         try {
-            $user = User::findOrFail($id);
+            $user = User::find($id);
+
+            if (!$user) {
+                return response()->json(['success' => false, 'message' => 'User tidak ditemukan'], 404);
+            }
             
             $nameParts = explode(' ', $user->fullname, 2);
             $firstName = $nameParts[0] ?? '';
@@ -85,7 +89,7 @@ class UserController extends Controller
                 ]
             ]);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'User not found'], 404);
+            return response()->json(['success' => false, 'message' => 'Terjadi kesalahan sistem'], 500);
         }
     }
 
@@ -111,7 +115,7 @@ class UserController extends Controller
                 'modalGelar'            => 'nullable|string|max:50',
                 'modalUsername'         => 'required|alpha_num|unique:users,name|max:255',
                 'modalAddressEmail'     => 'required|email|unique:users,email|max:255',
-                'position'              => 'required|exists:positions,no',
+                'position'              => 'required|exists:positions,id',
                 'modalAddressCountry'   => 'required|string|max:255',
                 'modalAddressAddress1'  => 'required|string|max:255',
                 'modalAddressAddress2'  => 'nullable|string|max:255',
@@ -180,7 +184,15 @@ class UserController extends Controller
             if (auth()->user()->access_level != 2) {
                 return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
             }
-            $user = User::findOrFail($id);
+			
+            $user = User::find($id);
+
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User tidak ditemukan atau ID salah.'
+                ], 404);
+            }
             
             $customAttributes = [
                 'editFirstName' => 'First Name',
@@ -197,7 +209,7 @@ class UserController extends Controller
                 'editGelar'       => 'nullable|string|max:50',
                 'editUsername'    => 'required|string|unique:users,name,' . $id . ',id|max:255',
                 'editEmail'       => 'required|email|unique:users,email,' . $id . ',id|max:255',
-                'position'        => 'required|exists:positions,no',
+                'position'        => 'required|exists:positions,id',
                 'editCountry'     => 'required|string|max:255',
                 'editAddress1'    => 'required|string|max:255',
                 'editAddress2'    => 'nullable|string|max:255',
@@ -215,9 +227,9 @@ class UserController extends Controller
             ], $customAttributes);
 
             $fullName = $validated['editFirstName'] . ' ' . $validated['editLastName'];
-			$technician = $request->wantsJson() 
-				? (int) $request->input('editTechnician', 0) 
-				: ($request->has('editTechnician') ? 1 : 0);
+            $technician = $request->wantsJson() 
+                ? (int) $request->input('editTechnician', 0) 
+                : ($request->has('editTechnician') ? 1 : 0);
 
             $user->update([
                 'name'         => strtolower($validated['editUsername']),
@@ -253,9 +265,10 @@ class UserController extends Controller
             ], 422);
         } catch (\Exception $e) {
             Log::error('Update User Error: ' . $e->getMessage());
+            
             return response()->json([
                 'success' => false,
-                'message' => 'System error: ' . $e->getMessage()
+                'message' => 'System error: Gagal mengupdate data.'
             ], 500);
         }
     }
@@ -270,13 +283,18 @@ class UserController extends Controller
                 return response()->json(['success' => false, 'message' => 'You cannot delete yourself.'], 403);
             }
 
-            $user = User::findOrFail($id);
+            $user = User::find($id);
+
+            if (!$user) {
+                return response()->json(['success' => false, 'message' => 'User tidak ditemukan.'], 404);
+            }
+
             $user->delete();
 
             return response()->json(['success' => true, 'message' => 'User berhasil dihapus']);
 
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Gagal menghapus user'], 500);
+            return response()->json(['success' => false, 'message' => 'Gagal menghapus user: ' . $e->getMessage()], 500);
         }
     }
 }

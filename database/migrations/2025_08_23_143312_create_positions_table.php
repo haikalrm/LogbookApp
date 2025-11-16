@@ -14,7 +14,8 @@ class CreatePositionsTable extends Migration
     public function up()
     {
         Schema::create('positions', function (Blueprint $table) {
-			$table->increments('no'); // primary + auto increment
+            $table->id();
+			$table->foreignId('user_id')->constrained('users')->onDelete('cascade');
 			$table->string('name', 255);
 			$table->timestamps();
 		});

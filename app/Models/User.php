@@ -25,7 +25,6 @@ class User extends Authenticatable
         'email',
         'password',
         'access_level',
-        'position',
         'technician',
         'signature',
         'country',
@@ -46,9 +45,12 @@ class User extends Authenticatable
         'remember_token',
     ];
     
-    public function position(): BelongsTo
+    /**
+     * Get all positions for this user.
+     */
+    public function positions(): HasMany
     {
-        return $this->belongsTo(Position::class, 'position', 'no');
+        return $this->hasMany(Position::class, 'user_id', 'id');
     }
 
     public function notifications(): BelongsToMany 

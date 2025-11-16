@@ -12,6 +12,15 @@ use Illuminate\Support\Facades\Validator;
 
 class LogbookItemController extends Controller
 {
+    private function checkPermission($user, $logbook, $targetUserId)
+    {
+        $isAdmin = $user->access_level == 2;
+        $isLogbookCreator = $logbook && $logbook->created_by == $user->id;
+        $isSelf = $targetUserId == $user->id;
+
+        return $isAdmin || $isLogbookCreator || $isSelf;
+    }
+
     public function index(Request $request, $unit_id, $logbook_id)
     {
         try {
@@ -24,7 +33,7 @@ class LogbookItemController extends Controller
             }
 
             $query = LogbookItem::with('teknisi_user')
-                        ->where('logbook_id', $logbook_id);
+                ->where('logbook_id', $logbook_id);
 
             if ($request->has('item_id') && !empty($request->item_id)) {
                 $query->where('id', $request->item_id);
@@ -39,7 +48,7 @@ class LogbookItemController extends Controller
                     'data' => $items
                 ]);
             }
-            
+
             return redirect()->route('logbook.edit.content', ['unit_id' => $unit_id, 'logbook_id' => $logbook_id]);
 
         } catch (\Exception $e) {
@@ -57,14 +66,6 @@ class LogbookItemController extends Controller
                 return back()->with('errorMessage', 'Logbook tidak ditemukan');
             }
 
-            $currentItemsCount = LogbookItem::where('logbook_id', $logbook_id)->count();
-            if ($currentItemsCount >= 10) {
-                if ($request->wantsJson()) {
-                    return response()->json(['success' => false, 'message' => 'Maksimal 10 item per logbook.'], 422);
-                }
-                return redirect()->back()->with('errorMessage', 'Maksimal 10 content per logbook sudah tercapai!');
-            }
-
             $validator = Validator::make($request->all(), [
                 'catatan' => 'required|string|min:5|max:1000',
                 'tanggal_kegiatan' => 'required|date',
@@ -79,6 +80,21 @@ class LogbookItemController extends Controller
                     return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
                 }
                 return back()->with('errorMessage', $validator->errors()->first())->withInput();
+            }
+
+            if (!$this->checkPermission($request->user(), $logbook, $request->teknisi)) {
+                if ($request->wantsJson()) {
+                    return response()->json(['success' => false, 'message' => 'Unauthorized. Anda tidak memiliki izin menambahkan item ini.'], 403);
+                }
+                return back()->with('errorMessage', 'Anda tidak memiliki izin menambahkan item untuk teknisi ini.')->withInput();
+            }
+
+            $currentItemsCount = LogbookItem::where('logbook_id', $logbook_id)->count();
+            if ($currentItemsCount >= 10) {
+                if ($request->wantsJson()) {
+                    return response()->json(['success' => false, 'message' => 'Maksimal 10 item per logbook.'], 422);
+                }
+                return redirect()->back()->with('errorMessage', 'Maksimal 10 content per logbook sudah tercapai!');
             }
 
             $logbookItem = new LogbookItem();
@@ -106,7 +122,7 @@ class LogbookItemController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Store Item Error: ' . $e->getMessage());
-            
+
             if ($request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => 'Gagal menyimpan: ' . $e->getMessage()], 500);
             }
@@ -121,6 +137,15 @@ class LogbookItemController extends Controller
             if (!$logbookItem) {
                 if ($request->wantsJson()) return response()->json(['success' => false, 'message' => 'Item tidak ditemukan'], 404);
                 return back()->with('errorMessage', 'Item tidak ditemukan');
+            }
+            
+            $logbook = Logbook::find($logbook_id);
+
+            if (!$this->checkPermission($request->user(), $logbook, $logbookItem->teknisi)) {
+                if ($request->wantsJson()) {
+                    return response()->json(['success' => false, 'message' => 'Unauthorized. Anda tidak memiliki izin mengedit item ini.'], 403);
+                }
+                return back()->with('errorMessage', 'Anda tidak berhak mengedit item ini.');
             }
 
             $validator = Validator::make($request->all(), [
@@ -158,7 +183,7 @@ class LogbookItemController extends Controller
 
             return redirect()->route('logbook.edit.content', ['unit_id' => $unit_id, 'logbook_id' => $logbook_id])
                              ->with('successMessage', 'Item logbook berhasil diperbarui!');
-                             
+
         } catch (\Exception $e) {
             if ($request->wantsJson()) return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
             return back()->with('errorMessage', 'Gagal update data.');
@@ -168,21 +193,15 @@ class LogbookItemController extends Controller
     public function destroy(Request $request, $unit_id, $logbook_id, $item_id)
     {
         try {
-            $user = $request->user();
-
             $logbookItem = LogbookItem::where('logbook_id', $logbook_id)->find($item_id);
-            
+
             if (!$logbookItem) {
                 return response()->json(['success' => false, 'message' => 'Item tidak ditemukan'], 404);
             }
 
-            $isAdmin = $user->access_level == 2;
-            $isAuthorItem = $logbookItem->teknisi == $user->id;
-            
             $logbook = Logbook::find($logbook_id);
-            $isLogbookCreator = $logbook && $logbook->created_by == $user->id;
 
-            if (!$isAdmin && !$isAuthorItem && !$isLogbookCreator) {
+            if (!$this->checkPermission($request->user(), $logbook, $logbookItem->teknisi)) {
                 return response()->json([
                     'success' => false, 
                     'message' => 'Unauthorized. Anda tidak memiliki izin menghapus item ini.'
@@ -197,12 +216,12 @@ class LogbookItemController extends Controller
                 'success' => true, 
                 'message' => 'Item berhasil dihapus!'
             ]);
-            
+
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Gagal menghapus: ' . $e->getMessage()], 500);
         }
     }
-    
+
     public function getByTeknisi(Request $request) {
         try {
             $userId = $request->user()->id;
@@ -212,7 +231,7 @@ class LogbookItemController extends Controller
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
-    
+
     public function teknisiSummary(Request $request) {
         try {
             $userId = $request->user()->id;

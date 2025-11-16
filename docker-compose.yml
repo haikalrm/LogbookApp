@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+  app:
+    build: .
+    container_name: logbook_app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mysql_primary
+    networks:
+      - appnet
+
+  mysql_primary:
+    image: mysql:8.0
+    container_name: mysql_primary
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: laravel
+    volumes:
+      - primary_data:/var/lib/mysql
+      - ./docker/mysql/primary/my.cnf:/etc/mysql/conf.d/my.cnf
+    ports:
+      - "3307:3306"
+    networks:
+      - appnet
+
+  mysql_replica:
+    image: mysql:8.0
+    container_name: mysql_replica
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - replica_data:/var/lib/mysql
+      - ./docker/mysql/replica/my.cnf:/etc/mysql/conf.d/my.cnf
+    ports:
+      - "3308:3306"
+    networks:
+      - appnet
+
+networks:
+  appnet:
+
+volumes:
+  primary_data:
+  replica_data:
