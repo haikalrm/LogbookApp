@@ -28,7 +28,7 @@
                                 <ul class="list-inline mb-0 d-flex align-items-center flex-wrap justify-content-sm-start justify-content-center gap-4">
                                     <li class="list-inline-item">
                                         <i class="ri-user-2-line me-2 ri-24px"></i>
-                                    <span class="fw-medium">{{ $user->positions->first()->name ?? 'Unknown'}}</span>
+                                    <span class="fw-medium">{{ $user->position->name ?? 'Unknown' }}</span>
                                     </li>
                                     <li class="list-inline-item">
                                         <i class="ri-map-pin-line me-2 ri-24px"></i>

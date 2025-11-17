@@ -19,18 +19,18 @@
       <tbody>
         @foreach($positions as $index => $row)
           <tr>
-            <td>{{ $index+1 }}</td>
-            <td id="position_name_{{ $row->no }}">{{ $row->name }}</td>
+            <td>{{ $index + 1 }}</td>
+            <td id="position_name_{{ $row->id }}">{{ $row->name }}</td>
             <td>
               <div class="dropdown">
                 <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
                   <i class="ri-more-2-line"></i>
                 </button>
                 <div class="dropdown-menu">
-                  <a class="dropdown-item edit-position" href="#" data-id="{{ $row->no }}">
+                  <a class="dropdown-item edit-position" href="javascript:void(0);" data-id="{{ $row->id }}">
                     <i class="ri-pencil-line"></i> Edit
                   </a>
-                  <a class="dropdown-item delete-position" href="#" data-id="{{ $row->no }}">
+                  <a class="dropdown-item delete-position" href="javascript:void(0);" data-id="{{ $row->id }}">
                     <i class="ri-delete-bin-7-line me-1"></i> Delete
                   </a>
                 </div>
@@ -83,9 +83,6 @@ $(document).ready(function() {
       search: '',
       searchPlaceholder: 'Search Positions'
     },
-    columnDefs: [
-      { targets: 0, orderable: false, searchable: true }
-    ],
     dom:
       '<"row"' +
         '<"col-md-2 d-flex align-items-center justify-content-md-start justify-content-center"<"dt-action-buttons mt-5 mt-md-0"B>>' +
@@ -112,7 +109,7 @@ $(document).ready(function() {
   });
 
   $('.add-new').html(
-    "<button class='btn btn-primary add-new-position' data-bs-toggle='modal' data-bs-target='#new-position'><i class='ri-add-line me-0 me-sm-1 d-inline-block d-sm-none'></i><span class='d-none d-sm-inline-block'>Add New Positions</span></button>"
+    "<button class='btn btn-primary add-new-position' data-bs-toggle='modal' data-bs-target='#new-position'><span class='d-none d-sm-inline-block'>Add New Positions</span></button>"
   );
 
   $('#position_list').on('click', '.edit-position', function () {
@@ -125,7 +122,7 @@ $(document).ready(function() {
   });
 
   $(document).on('click', '.add-new-position', function () {
-    $('#position_name').val("");
+    $('#position_form')[0].reset();
     $('#position_id').val(0);
     $('#modalCenterTitle').text('Tambah Jabatan Baru');
   });
@@ -136,21 +133,23 @@ $(document).ready(function() {
     if(isSubmitting) return;
     isSubmitting = true;
 
-    var formData = $(this).serialize();
     $.ajax({
       url: "{{ route('positions.update') }}",
       type: 'POST',
-      data: formData,
-      dataType: 'json',
+      data: $(this).serialize(),
       success: function(data){
         if(data.success){
           location.reload();
         } else {
-          new Notyf().error(data.message);
+          Swal.fire('Error!', data.message, 'error');
         }
       },
-      error: function() {
-        new Notyf().error('Terjadi kesalahan sistem.');
+      error: function(xhr) {
+        var errorMessage = 'Terjadi kesalahan sistem.';
+        if (xhr.responseJSON && xhr.responseJSON.message) {
+            errorMessage = xhr.responseJSON.message;
+        }
+        Swal.fire('Error!', errorMessage, 'error');
       },
       complete: function() {
         isSubmitting = false;
@@ -169,7 +168,6 @@ $(document).ready(function() {
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Ya, Hapus!',
-      cancelButtonText: 'Batal',
       customClass: {
         confirmButton: 'btn btn-primary me-3',
         cancelButton: 'btn btn-label-secondary'
@@ -184,37 +182,13 @@ $(document).ready(function() {
             _token: '{{ csrf_token() }}',
             position_id: id
           },
-          dataType: 'json',
           success: function(data) {
             if(data.success) {
-              Swal.fire({
-                icon: 'success',
-                title: 'Terhapus!',
-                text: 'Jabatan berhasil dihapus.',
-                customClass: { confirmButton: 'btn btn-success' }
-              });
-              
+              Swal.fire('Terhapus!', data.message, 'success');
               table.row($row).remove().draw(false);
-              
-              table.rows().every(function (rowIdx, tableLoop, rowLoop) {
-                  this.cell(rowIdx, 0).data(rowIdx + 1);
-              }).draw(false);
             } else {
-              Swal.fire({
-                icon: 'error',
-                title: 'Gagal!',
-                text: data.message,
-                customClass: { confirmButton: 'btn btn-danger' }
-              });
+              Swal.fire('Gagal!', data.message, 'error');
             }
-          },
-          error: function() {
-            Swal.fire({
-              icon: 'error',
-              title: 'Error!',
-              text: 'Gagal menghapus posisi.',
-              customClass: { confirmButton: 'btn btn-danger' }
-            });
           }
         });
       }

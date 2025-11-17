@@ -32,7 +32,7 @@ class LogbookController extends Controller
     public function apiIndex(Request $request)
     {
         try {
-            $query = Logbook::query()->with('unit', 'createdBy');
+            $query = Logbook::query()->with(['unit', 'createdBy.position']);
 
             if ($request->filled('id')) {
                 $query->where('id', $request->id);

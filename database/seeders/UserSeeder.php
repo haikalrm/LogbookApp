@@ -9,93 +9,88 @@ use App\Models\User;
 
 class UserSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        if (!User::where('email', 'admin@example.com')->exists()) {
-            User::create([
-                'name' => 'admin',
-                'fullname' => 'Administrator Utama',
-                'gelar' => 'S.T',
+        $users = [
+            [
+                'name' => 'airlog',
+                'fullname' => 'Airlog Administrator',
+                'gelar' => 'M.T.',
                 'email' => 'admin@example.com',
                 'password' => Hash::make('password123'),
                 'access_level' => '2',
                 'technician' => 1,
-                'signature' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAESCAYAAABvXk0WAAAACXBIWXMAAAsTAAALEwEAmpwYAAACzUlEQVR4nO3cMW7CQBBA0Z7+5WQyGRxC0KqYpKAgd40l4JGxdmUjcdt/3DKSTNH3b5/0VwuBgAAAAAAAAAAAAAAAAAAgG8xj9+Urt+LrFq+m4+O1q1T35f93kG2t/sWfS4z3tvz/2oH6h53Rk8n1+q6Dfvt+9m6Dfrq6y3q6vB4W3Wq3fa+Pwb9Xb7cXutp34mTfZr9vN+W0Yx+HW7oR0Wf1+QfV1+pP+r+Ufx9H9OyvqR9k/8r+X6O7eV5ePz+3/6rkdc39m4vH/4x+S4+eH/P9+X8vGv7vjP5zEebDkAAAAAAAAAAAAAAAAAAICf3QXu/4W9d2MPX8nZ7HtPx38nK7t9W74f3IxfIufA/1Pz8Px8Xp/4Z7+//s5+O7+f+Hb7eG9T3tfuOf2/HsB3efj+jgD+fPrt/0f++4dzl8f7c6eD9+f/i/1+O7+fP7T/9/zn/m/+N/1eX3+vv3y/7k/B/n5/P8P/6w5B9b+z/3+P3/3/kc8f7f9/wL7eDz+P7/z/gf+f/8D/AAAAAAAAAAAAAAAAgD+5B9DPrD5rWjAAAAAElFTkSuQmCC',
+                'signature' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIQAAAAxCAYAAAAbQwFhAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAA0BSURBVHhe7ZpfSBzn3sc/571wb4wXJoIkQdK6oGzBaGAXS5duWDkSRW31SGIiUY9HNsTqwSMelShbstSgqfiGxkaypL5q0WPDNkm1VPHgkoUtRwx0Veii4CZFtAhuvJh4s3vTczGz68z+UVtzeiLvfECYmWdm3Hnm+/ye7+/3zB9++eWXX1BRkfifyAMq/79RBaGiQBWEigJVECoKVEGoKFAFoaJAFYSKAlUQKgpUQagoUAWhokAVhIoCVRAqClRBqCg4AoIIsuGwUdYyjxDZ9F9C8EzQUlhG7pnzvHPmPDlZ9bSMet+Y33cY/vCfWv4OCGssTk7zcNLNom+bn7d2pBYjn618Qp4m4oKYbPOdpY6/z2wDkGEd51FtauRJvyM7uFuquObYBhIx9z6gtzyRqeoiOlxvwu87PK8/QgheRiwV5GZV8eeOMabm1mRiANhkY0u2G5c1RgrLwmIAWBkYYz6gOOl3ZbmnThIDkGPh4/JUNCSiN2kBWBmYYFl5yZHjtQpCmOujKKuenplNgqSir23mftcFjstPSr9A3mn5gXikUXW3gQxpLyHnCmOzzRgOFFn+A3jtNA5shnf1lUZOSNuBQFDc2NrEHz7jaPLaBCG4uimqmOAFcDy3mcmVcYasJSR43byUnXcyP5tTsv09SS9naPgC+srbuB5bOJsUecLvRZDZO2P8HN5Pw5iTHG5bnlsTN9O1nAyfczR5PYLwOaipnhZfvK6BofES3tYAeJlyyKcL0OeK4fWgJJnaGeoy8F/TAkBgnicz8gM6MtN326Zc4uax3Gzelp/2JiB4Gaku4/2OhciWmLwGQWwy0tjPCgBGPh0v3+0Urxu3Ys43YsyV7+9FkOdzE/RV14tuvtrJwexDEL/XzUhLE0UZ53nH4t69bsvNzcIi3jlznvcVWcsO7pZW+jxK8YaZc+OU7+dmkylt+h1jUpuW+us6+VnxEVZ50tPJZX0RORY3fo+DxrxOnhzIW8UiyMbcBN0VVeHM550z+eTqy8jNqqfHFSSvPDvyopgcWhB+Rzc9XnFb39tMoWwo+71eWZgF0nVkHsADBHwOLp/Jp7iijy9cXl4B+uJs9r1UmOemMR9TYSc9jgVeBBK5WGtEE/I3+k4eesWX/tLRSs3AGgF2mJUyhxNJiZF3BOC5V3pAiZM5WtE/+BxYOsS2DKuVqv28UWCT2ZYqcrLq6Bhws7QFmYExykr7cfrcjEzuehQAYdJGzeDangNB8Diw6PPJr+jjy7k1XoVbgrza2hb3U0q4lCO/Kj6HFMQCn4dCUVIJfysPzasiyy5lmDpISBXm+vhTXj9LiqM6CkzKe0fhm8ZibOXhuuyYxkxBLgguW9jfyFnpqeLcmSL+6oCC4TtUhaYBBTKPIHE2RwtbThpLxcj4VuUdhmrTFOdEInjsXM6o4K+ONYKkUWC18pk1mw2XN+yxVjy7/yfgG6Om0cmyJ54gdnB3VPFuaT/fb6XxgX2EH356yo8r3/KvZ+2YZWeeLDeHI9p+HEoQ/lE7D6Vfm9VWw1lF6yrzc4oD+/oH/2QnRRVuMq1XwtkFAOlmjCnyA0oCvjHK8rrxNzVzURZGjpWbOetzUFPthNxmvl55yg+zFuW9SaZgeIReU+zoAAu4JY8gouWEYOey3oZTSOa9rhG+7sre0+MIrm6KSsdEkeuuMLY0Qm+tjo1RpeFGqt+4e1r5Y56dlSQzvV3G6HsH1hgpLePa6BqgpW12hFv5aWIE1SQSdE3LprhEjPl797ucQwhilZGBUCg1UhcRHdhaZUkxJ2rR5yTIDyjwT3ZS1ujFMDxC7+lNyZOI7JWZCB47l/PsYB3hUXECL8LDKZEC0w4dpf348608Gi8hUwOa9CvY75rFbECj5eqeYgB8qxHRapUvW8ZYSjFgnR3HXim9iHjIDXeSmfvjoWwplbcjLcdkK+eyqrg2MM9LtLQ9tmKMUsMaI6VV9HiCQDIfDN+LiGzbzI7KIrPGTMEBpwsOI4jA5BBfSOH5WGV5dOXRu8Az+b5Gx9k4c6woBjcnrHfoNSWy6JqXtcZXeMA3Rk3pGP7i22LI9s7L/qeWV5N9TGHmVq85XDMAOFFs5Z8/PeXHlQe07yUGwO+Zj5hqknnPeo9/PbvNpfT4AgcxA7khTSsA5q5mxQvONMUzesl8EHMKC+JuaQp7tuOVn3DLFPEbfA4eeGT7+UYMst39+I2C2ObJoDu892q0SXK2sr/qacUV5BsiphQRwWUTxXD9njQPb7I4J3f7BvJiKdzn4HKeXRz9d8W0dHlObv4WmJqEi8OxRtleBBHWV3GP2mksLKOoRemDMqz3sNfqosN4DBZt3XwTSmVOX+GjYqX4TpRbuKqYChM4pivhM/c4t2IJ1dPPjVClFB0fNUWGmB2+s8nrJWDOz1asB8X2I7vEFkRgk1lbE0VZ+dILrqBxULZ4E6nCA5CREz3KBZeNomonFN9mqE3q5K0FnD7ZSbmGaEPkc1CW18+KroEhe2j0b7PsUbp0TA38LZaY9mBjsJ53jXVc6xjD6ZVcephEzuYccK0i4ObB6G7ZPaO2JPo50HH1+m6/FAzPMPddM3mnY0Webb6yTex6DlM5H0b4KmGmD1uE39HnJOAfbSK/xcmKo4/P5X0bg2hB+ByiGx5c4IUglWTZxGmrp2ZQdMHzgxNhFZrvzvDjT0+Vf8/a0YdvCJCKMTe6I5N0RgymBoakEQ5EhH3IyM9WhHsAUnQYTRe4L6954MWtMLGJXLxuPtBIlnMq18BbSTrM19v5eraZ9xSt2egjB2Uc/JMOhbGLJ6QXnlVxQ1PCRVNkq4x1J1/JBuFbuVqldxGcdFicSgGnGDCchhPlNRRoADZxuyIGTQRKQUhz3hLA6RL+b+kpPzz7hA9Oa7lof8Sj2jQQnHw5KoV0TQlXi2OoOdI/oONsrI5MMdM7LH+psDij9A+KjhQWuFnaypMtHc3D7cqpwDPP7iQm/v5LBy6CydBZ+HbpHnfbLpC57uV7RVs2ZyO9UhyW5+RTTSpvxcqSBCdfTYqbGW1X9pzr/XNuhdFO0Mj6XZjnRp6NxeISRbp5LN8oRiVNGlmSfzuVsnf6rhSEa3p3zssxYkgCTYqRW+4HfJwv3mixpz+sfH1XTcyH2PBJqg+RrosRLmOxyaKiWqjdNaKCl76KJh56NllUrJ6KbHjEAlaIk8UHz73jEVmQOpajC2c7zwdbsYzGqxGAsmGTF1FVyB3cHVJfnr7CrX2WzQOC8pl/9qwiAAHfNC15rXwTMHOrMlGx2hpK8wM+J098ADqMuTEGsAyFIDbWZQWY9Rgrd74xbobmRV0D1shUUyIcBkPoUsMdKbhs/LF0jOWYPbnGkuIdBAmEH7qeL7zJFAzf4+PcSMO1zbMZ+f9MpaA82rP8Wn72KgtSJ9Ol5/U5aLHN8/2kUoTx2eFhh51FabAFthYYqaji2uS2WEcYtvxq8b6a7OTdM+c5l9fNVMBA12MrmevyyrAWfU6QxUGppkECWdZ2LsWKVDIUgjiVk727VO3po6ZjHn8AcX1gTsz3VwCSDHTdVYZ6OcciS8DCDgJBnjs6Kap2EkjXcvJAodeLTS899FYyBfZ4NYMI/5BipjAqZTs8Gk0CCG5aSvtZSTJz334h2t9IRKWU3jGuZIkZ2Dl9Ez1z20AaF8djpZfRnCouj/BlEilmPp29zYfpsKioDK/xv8YirtjmeanRcnX4Ef/Yp5pK9BdTO7gbQ8qNQ4qZT7+zUriX0jx9vF8qc8RhEsi6fof7oYwiilX6jHXh+sYuOv7y+DbNObHEIP6/3NIJabQmo++6zVDl4SOEf7Qek7RWoSDJyKezn+zdB3i5mVXPw3jf1aWY6XrczocxM4rYCHP9XLNMsCQESUjSkdfWgLVS6svAPDeyWvlGFnkTUrK51NZAfbk2Tn9HE+MTuiAbM3Y6eqZZ9O0g5hmJHNdl82FtDXUHvLl/pg9L4wQrAYBEskwl1HXVxEmpZPimaazow7kVBE0a+koLXW1GTu0RUZZ7KvjTAJivN9PeZNjz3F/HNrMtnXQ4pKnhgL8njODlq45+Pp/x8lLqh+M6A3VtFi6ZUveucB6IIM9dEzwYmMCpWNiCjLYR/nF9nypqDGIIQuVNJ7C1ylRPH92OVU4UN2C1XoA7Zfw5lP2Ryl9mx2k+wFQUSXQdQuXNRfrY5Zy+jr51M/eXZvj2bgmGpPndUgDil2aXfoMYUAVxdAh/r+ra5njxbb4dLw9/Urj7kQ7iop61JO5i4H6ogjgKBOaxVYe+58im2Sqr7Apuum27xvd4sRVr5ILXr0AVxFFga43n4exhFffctlifWXdzo7CTqVCbzsJQ7+G+P1VN5ZFgnxQWOG5qZsge+rj5t6MK4qgQlcJCQlIqmaZyPmoqwbjftxkHRBWEigLVQ6goUAWhokAVhIoCVRAqClRBqChQBaGi4N/JRunqiDlvFQAAAABJRU5ErkJggg==',
                 'country' => 'Indonesia',
-                'phone_number' => '08123456789',
-                'address' => 'Jl. Merdeka No. 1',
-                'city' => 'Jakarta',
-                'state' => 'DKI Jakarta',
-                'zip_code' => 10110,
-                'joined' => now(),
-                'remember_token' => Str::random(10),
-            ]);
-        }
-
-        if (!User::where('email', 'budi.teknisi@example.com')->exists()) {
-            User::create([
+                'phone_number' => '081122334455',
+                'address' => 'Gedung Airlog Lt. 1, Jl. Industri No. 10',
+                'city' => 'Bandung',
+                'state' => 'Jawa Barat',
+                'zip_code' => 40123,
+                'joined' => '2025-01-01',
+            ],
+            [
                 'name' => 'budisantoso',
-                'fullname' => 'Budi Santoso, A.Md.T',
-                'gelar' => 'A.Md.T',
+                'fullname' => 'Budi Santoso',
+                'gelar' => 'A.Md.T.',
                 'email' => 'budi.teknisi@example.com',
                 'password' => Hash::make('password123'),
                 'access_level' => '0',
                 'technician' => 1,
-                'signature' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAESCAYAAABvXk0WAAAACXBIWXMAAAsTAAALEwEAmpwYAAACzUlEQVR4nO3cMW7CQBBA0Z7+5WQyGRxC0KqYpKAgd40l4JGxdmUjcdt/3DKSTNH3b5/0VwuBgAAAAAAAAAAAAAAAAAAgG8xj9+Urt+LrFq+m4+O1q1T35f93kG2t/sWfS4z3tvz/2oH6h53Rk8n1+q6Dfvt+9m6Dfrq6y3q6vB4W3Wq3fa+Pwb9Xb7cXutp34mTfZr9vN+W0Yx+HW7oR0Wf1+QfV1+pP+r+Ufx9H9OyvqR9k/8r+X6O7eV5ePz+3/6rkdc39m4vH/4x+S4+eH/P9+X8vGv7vjP5zEebDkAAAAAAAAAAAAAAAAAAICf3QXu/4W9d2MPX8nZ7HtPx38nK7t9W74f3IxfIufA/1Pz8Px8Xp/4Z7+//s5+O7+f+Hb7eG9T3tfuOf2/HsB3efj+jgD+fPrt/0f++4dzl8f7c6eD9+f/i/1+O7+fP7T/9/zn/m/+N/1eX3+vv3y/7k/B/n5/P8P/6w5B9b+z/3+P3/3/kc8f7f9/wL7eDz+P7/z/gf+f/8D/AAAAAAAAAAAAAAAAgD+5B9DPrD5rWjAAAAAElFTkSuQmCC',
+                'signature' => 'data:image/png;base64,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',
                 'country' => 'Indonesia',
-                'phone_number' => '08123456790',
-                'address' => 'Jl. Mawar No. 15',
-                'city' => 'Jakarta',
-                'state' => 'DKI Jakarta',
-                'zip_code' => 10120,
-                'joined' => now(),
-                'remember_token' => Str::random(10),
-            ]);
-        }
-
-        if (!User::where('email', 'sari.teknisi@example.com')->exists()) {
-            User::create([
+                'phone_number' => '081234567890',
+                'address' => 'Perum Harapan Indah Blok C/12',
+                'city' => 'Bekasi',
+                'state' => 'Jawa Barat',
+                'zip_code' => 17131,
+                'joined' => '2025-03-15',
+            ],
+            [
                 'name' => 'sariwulandari',
-                'fullname' => 'Sari Wulandari, S.T',
-                'gelar' => 'S.T',
+                'fullname' => 'Sari Wulandari',
+                'gelar' => 'S.Tr.T.',
                 'email' => 'sari.teknisi@example.com',
                 'password' => Hash::make('password123'),
                 'access_level' => '0',
                 'technician' => 1,
-                'signature' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAESCAYAAABvXk0WAAAACXBIWXMAAAsTAAALEwEAmpwYAAACzUlEQVR4nO3cMW7CQBBA0Z7+5WQyGRxC0KqYpKAgd40l4JGxdmUjcdt/3DKSTNH3b5/0VwuBgAAAAAAAAAAAAAAAAAAgG8xj9+Urt+LrFq+m4+O1q1T35f93kG2t/sWfS4z3tvz/2oH6h53Rk8n1+q6Dfvt+9m6Dfrq6y3q6vB4W3Wq3fa+Pwb9Xb7cXutp34mTfZr9vN+W0Yx+HW7oR0Wf1+QfV1+pP+r+Ufx9H9OyvqR9k/8r+X6O7eV5ePz+3/6rkdc39m4vH/4x+S4+eH/P9+X8vGv7vjP5zEebDkAAAAAAAAAAAAAAAAAAICf3QXu/4W9d2MPX8nZ7HtPx38nK7t9W74f3IxfIufA/1Pz8Px8Xp/4Z7+//s5+O7+f+Hb7eG9T3tfuOf2/HsB3efj+jgD+fPrt/0f++4dzl8f7c6eD9+f/i/1+O7+fP7T/9/zn/m/+N/1eX3+vv3y/7k/B/n5/P8P/6w5B9b+z/3+P3/3/kc8f7f9/wL7eDz+P7/z/gf+f/8D/AAAAAAAAAAAAAAAAgD+5B9DPrD5rWjAAAAAElFTkSuQmCC',
+                'signature' => 'data:image/png;base64,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',
                 'country' => 'Indonesia',
-                'phone_number' => '08123456791',
-                'address' => 'Jl. Melati No. 22',
-                'city' => 'Jakarta',
+                'phone_number' => '081299887766',
+                'address' => 'Apartemen Gading Icon Tower A/10',
+                'city' => 'Jakarta Timur',
                 'state' => 'DKI Jakarta',
-                'zip_code' => 10130,
-                'joined' => now(),
-                'remember_token' => Str::random(10),
-            ]);
-        }
-
-        if (!User::where('email', 'andi.supervisor@example.com')->exists()) {
-            User::create([
+                'zip_code' => 13260,
+                'joined' => '2025-06-01',
+            ],
+            [
                 'name' => 'andisupervisor',
-                'fullname' => 'Andi Supervisor, S.T, M.T',
-                'gelar' => 'S.T, M.T',
+                'fullname' => 'Andi Pratama',
+                'gelar' => 'S.T., M.T.',
                 'email' => 'andi.supervisor@example.com',
                 'password' => Hash::make('password123'),
                 'access_level' => '1',
                 'technician' => 0,
-                'signature' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAESCAYAAABvXk0WAAAACXBIWXMAAAsTAAALEwEAmpwYAAACzUlEQVR4nO3cMW7CQBBA0Z7+5WQyGRxC0KqYpKAgd40l4JGxdmUjcdt/3DKSTNH3b5/0VwuBgAAAAAAAAAAAAAAAAAAgG8xj9+Urt+LrFq+m4+O1q1T35f93kG2t/sWfS4z3tvz/2oH6h53Rk8n1+q6Dfvt+9m6Dfrq6y3q6vB4W3Wq3fa+Pwb9Xb7cXutp34mTfZr9vN+W0Yx+HW7oR0Wf1+QfV1+pP+r+Ufx9H9OyvqR9k/8r+X6O7eV5ePz+3/6rkdc39m4vH/4x+S4+eH/P9+X8vGv7vjP5zEebDkAAAAAAAAAAAAAAAAAAICf3QXu/4W9d2MPX8nZ7HtPx38nK7t9W74f3IxfIufA/1Pz8Px8Xp/4Z7+//s5+O7+f+Hb7eG9T3tfuOf2/HsB3efj+jgD+fPrt/0f++4dzl8f7c6eD9+f/i/1+O7+fP7T/9/zn/m/+N/1eX3+vv3y/7k/B/n5/P8P/6w5B9b+z/3+P3/3/kc8f7f9/wL7eDz+P7/z/gf+f/8D/AAAAAAAAAAAAAAAAgD+5B9DPrD5rWjAAAAAElFTkSuQmCC',
+                'signature' => 'data:image/png;base64,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',
                 'country' => 'Indonesia',
-                'phone_number' => '08123456792',
-                'address' => 'Jl. Kenanga No. 5',
-                'city' => 'Jakarta',
+                'phone_number' => '081155667788',
+                'address' => 'Jl. Tebet Barat Dalam Raya No. 45',
+                'city' => 'Jakarta Selatan',
                 'state' => 'DKI Jakarta',
-                'zip_code' => 10140,
-                'joined' => now(),
-                'remember_token' => Str::random(10),
-            ]);
+                'zip_code' => 12810,
+                'joined' => '2024-11-20',
+            ],
+        ];
+
+        foreach ($users as $userData) {
+            User::updateOrCreate(
+                ['email' => $userData['email']],
+                array_merge($userData, [
+                    'remember_token' => Str::random(10),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ])
+            );
         }
     }
 }

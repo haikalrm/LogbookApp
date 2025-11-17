@@ -89,7 +89,7 @@ class AuthController extends Controller
             'status' => 'success',
             'message' => 'Login successful',
             'data' => [
-                'user' => $user->load('positions'),
+                'user' => $user->load('position'),
                 'token' => $token
             ]
         ]);
@@ -103,7 +103,7 @@ class AuthController extends Controller
 
     public function profile(Request $request)
     {
-        $user = $request->user()->load(['positions', 'recentDevices']);
+        $user = $request->user()->load(['position', 'recentDevices']);
         return response()->json(['status' => 'success', 'data' => $user]);
     }
 
@@ -160,7 +160,7 @@ class AuthController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Profile updated successfully',
-            'data' => $user->load('positions')
+            'data' => $user->load('position')
         ]);
     }
 

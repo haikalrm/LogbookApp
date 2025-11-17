@@ -33,7 +33,8 @@ class User extends Authenticatable
         'city',
         'state',
         'zip_code',
-        'joined'
+        'joined',
+		'position_id'
     ];
 
     protected $casts = [
@@ -45,12 +46,9 @@ class User extends Authenticatable
         'remember_token',
     ];
     
-    /**
-     * Get all positions for this user.
-     */
-    public function positions(): HasMany
+    public function position(): BelongsTo
     {
-        return $this->hasMany(Position::class, 'user_id', 'id');
+		return $this->belongsTo(Position::class, 'position_id', 'id');
     }
 
     public function notifications(): BelongsToMany 

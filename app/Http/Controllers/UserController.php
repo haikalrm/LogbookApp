@@ -41,7 +41,7 @@ class UserController extends Controller
             abort(403, 'Access denied. Only Staff and Admin can manage users.');
         }
         
-        $users = User::with('positions')->paginate(10);
+        $users = User::with('position')->paginate(10);
         $positions = Position::all();
         
         $users->getCollection()->makeHidden(['password', 'remember_token']);
@@ -56,7 +56,7 @@ class UserController extends Controller
     public function edit($id)
     {
         try {
-            $user = User::find($id);
+            $user = User::with('position')->find($id);
 
             if (!$user) {
                 return response()->json(['success' => false, 'message' => 'User tidak ditemukan'], 404);
@@ -75,7 +75,7 @@ class UserController extends Controller
                     'gelar' => $user->gelar,
                     'username' => $user->name,
                     'email' => $user->email,
-                    'position' => $user->position,
+                    'position' => $user->position ? $user->position->id : null,
                     'country' => $user->country,
                     'address1' => $user->address,
                     'address2' => '', 
@@ -141,8 +141,8 @@ class UserController extends Controller
                 'email'           => $validated['modalAddressEmail'],
                 'password'        => Hash::make('password123'),
                 'access_level'    => $validated['customRadioIcon-01'],
-                'position'        => $validated['position'],
-                'profile_picture' => 'default.png',
+                'position_id'     => $validated['position'],
+				'profile_picture' => 'default.png',
                 'technician'      => $request->has('technician') ? 1 : 0,
                 'signature'       => $validated['signature'],
                 'country'         => $validated['modalAddressCountry'],
@@ -154,6 +154,7 @@ class UserController extends Controller
                 'joined'          => now(),
             ]);
             
+			$user->load('position');
             $user->makeHidden(['password', 'remember_token']);
 
             return response()->json([
@@ -237,7 +238,7 @@ class UserController extends Controller
                 'gelar'        => $validated['editGelar'] ?? '',
                 'email'        => $validated['editEmail'],
                 'access_level' => $validated['editRadioIcon-01'],
-                'position'     => $validated['position'],
+                'position_id'  => $validated['position'],
                 'technician'   => $technician,
                 'signature'    => $validated['editSignature'],
                 'country'      => $validated['editCountry'],
@@ -248,6 +249,7 @@ class UserController extends Controller
                 'zip_code'     => $validated['editZipCode'],
             ]);
             
+			$user->load('position');
             $user->makeHidden(['password', 'remember_token']);
 
             return response()->json([
