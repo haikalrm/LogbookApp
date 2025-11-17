@@ -6,10 +6,7 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
 <style>
-    /* --- FIX UTAMA: AGAR SWEETALERT MUNCUL DI ATAS MODAL --- */
     .swal2-container { z-index: 9999 !important; }
-
-    /* FIX DATATABLES MODAL */
     .dtr-bs-modal .modal-body { padding: 0 !important; }
     .dtr-details { width: 100%; border-collapse: collapse; }
     .dtr-details tr { border-bottom: 1px solid #eceef1; }
@@ -19,8 +16,6 @@
     .dtr-details .dtr-data { color: #697a8d; font-weight: 400; }
     .dtr-details .dtr-data img { max-width: 80px; height: auto; border: 1px solid #d9dee3; padding: 4px; border-radius: 6px; background: #fff; }
     .dtr-details .dtr-data .badge { font-size: 0.75rem; }
-
-    /* SIGNATURE PAD */
     .signature-container { display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #fdfdfd; padding: 10px; border-radius: 8px; }
     canvas#signature-pad, canvas#edit-signature-pad { border: 2px dashed #d9dee3; border-radius: 8px; background-color: #fff; cursor: crosshair; box-shadow: 0 2px 6px rgba(0,0,0,0.05); touch-action: none; }
     canvas#signature-pad:hover, canvas#edit-signature-pad:hover { border-color: #696cff; }
@@ -59,7 +54,8 @@
                             @else <span class="badge rounded-pill bg-label-secondary">User</span>
                             @endif
                         </td>
-                        <td>{{ $user->position_relation->name ?? 'N/A' }}</td> <td>
+                        <td>{{ $user->position->name ?? 'N/A' }}</td>
+                        <td>
                             @if($user->signature)
                                 @php
                                     $sigSrc = str_starts_with($user->signature, 'data:image') ? $user->signature : asset($user->signature);
@@ -147,7 +143,7 @@
                             <select id="modalPosition" name="position" class="select2 form-select" required>
                                 <option value="" selected disabled>Select Position</option>
                                 @foreach($positions as $position)
-                                    <option value="{{ $position->no }}">{{ $position->name }}</option>
+                                    <option value="{{ $position->id }}">{{ $position->name }}</option>
                                 @endforeach
                             </select>
                             <label>Position</label>
@@ -232,7 +228,7 @@
                             <select id="editPosition" name="position" class="select2 form-select" required>
                                 <option value="" disabled>Select Position</option>
                                 @foreach($positions as $position)
-                                    <option value="{{ $position->no }}">{{ $position->name }}</option>
+                                    <option value="{{ $position->id }}">{{ $position->name }}</option>
                                 @endforeach
                             </select>
                             <label>Position</label>
@@ -288,7 +284,6 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-// Fungsi Toggle Signature yang Diperbarui
 function toggleSigMethod(method, context) {
     var drawSection = context === 'add' ? '#section-draw-add' : '#section-draw-edit';
     var uploadSection = context === 'add' ? '#section-upload-add' : '#section-upload-edit';
@@ -300,6 +295,42 @@ function toggleSigMethod(method, context) {
         $(drawSection).addClass('d-none'); 
         $(uploadSection).removeClass('d-none'); 
     }
+}
+
+function cleanSignature(canvas) {
+    const ctx = canvas.getContext('2d');
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+
+    for (let i = 0; i < data.length; i += 4) {
+        let brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
+        if (brightness > 180) {
+            data[i] = 255;
+            data[i + 1] = 255;
+            data[i + 2] = 255;
+        }
+    }
+    ctx.putImageData(imageData, 0, 0);
+    return canvas.toDataURL('image/png');
+}
+
+async function processUploadToCanvas(file, canvasId) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.getElementById(canvasId);
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                resolve(cleanSignature(canvas));
+            };
+            img.src = event.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
 }
 
 $(document).ready(function() {
@@ -324,16 +355,6 @@ $(document).ready(function() {
         return canvas.toDataURL() === blank.toDataURL();
     }
 
-    function readFileAsBase64(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = error => reject(error);
-            reader.readAsDataURL(file);
-        });
-    }
-
-    // --- DataTable Initialization (Sama seperti sebelumnya) ---
     var dt_user_table = $('#users_list').DataTable({
         responsive: {
             details: {
@@ -359,21 +380,21 @@ $(document).ready(function() {
     $('.add-new').html("<button class='btn btn-primary waves-effect waves-light text-nowrap' data-bs-toggle='modal' data-bs-target='#addNewUser'><i class='ri-add-line me-1'></i> Add New</button>");
     $('#modalUsername, #editUsername').on('input', function() { $(this).val($(this).val().toLowerCase().replace(/[^a-z0-9]/g, '')); });
 
-    // --- ADD USER SUBMIT LOGIC ---
     var isSubmitting = false;
     $('#addNewUserForm').on('submit', async function (e) {
         e.preventDefault();
         if (isSubmitting) return;
 
         let finalSignature = '';
+        const canvas = document.getElementById('signature-pad');
+
         if ($('#sigDraw').is(':checked')) {
-            var canvas = document.getElementById('signature-pad');
             if (isCanvasBlank(canvas)) { Swal.fire({ icon: 'warning', title: 'Perhatian!', text: 'Harap berikan tanda tangan.' }); return false; }
-            finalSignature = canvas.toDataURL('image/png');
+            finalSignature = cleanSignature(canvas);
         } else {
             const fileInput = document.getElementById('signatureFile');
             if (fileInput.files.length === 0) { Swal.fire({ icon: 'warning', title: 'Perhatian!', text: 'Harap upload file tanda tangan.' }); return false; }
-            try { finalSignature = await readFileAsBase64(fileInput.files[0]); } 
+            try { finalSignature = await processUploadToCanvas(fileInput.files[0], 'signature-pad'); } 
             catch (err) { Swal.fire({ icon: 'error', text: 'Gagal membaca file.' }); return false; }
         }
         $('#signature').val(finalSignature);
@@ -400,16 +421,14 @@ $(document).ready(function() {
         });
     });
 
-    // --- EDIT BUTTON CLICK ---
     $('#users_list').on('click', '.edit-record', function () {
         var userId = $(this).data('id');
         var editCanvas = document.getElementById('edit-signature-pad');
         if (editCanvas) { var ctx = editCanvas.getContext('2d'); ctx.clearRect(0, 0, editCanvas.width, editCanvas.height); }
         
-        // Reset radio buttons to 'Draw' by default
         $('#editSigDraw').prop('checked', true);
         toggleSigMethod('draw', 'edit');
-        $('#editSignatureFile').val(''); // Reset file input
+        $('#editSignatureFile').val('');
 
         $.ajax({
             url: '{{ route("users.edit", ":id") }}'.replace(':id', userId),
@@ -432,7 +451,6 @@ $(document).ready(function() {
                     $('#editZipCode').val(user.zip_code);
                     $('#editTechnician').prop('checked', user.technician == 1);
                     
-                    // Set Position Dropdown
                     $('#editPosition').val(user.position).trigger('change');
 
                     $('.form-check.custom-option').removeClass('checked');
@@ -450,28 +468,24 @@ $(document).ready(function() {
         });
     });
 
-    // --- EDIT USER SUBMIT LOGIC ---
     $('#editUserForm').on('submit', async function (e) {
         e.preventDefault();
         
         let finalSignature = '';
         var canvas = document.getElementById('edit-signature-pad');
         
-        // Cek mode mana yang aktif
         if ($('#editSigDraw').is(':checked')) {
-            // Jika canvas tidak kosong, gunakan itu. Jika kosong, biarkan kosong (controller mungkin akan mempertahankan yang lama)
             if (canvas && !isCanvasBlank(canvas)) { 
-                finalSignature = canvas.toDataURL('image/png'); 
+                finalSignature = cleanSignature(canvas); 
             }
         } else {
             const fileInput = document.getElementById('editSignatureFile');
             if (fileInput.files.length > 0) { 
-                try { finalSignature = await readFileAsBase64(fileInput.files[0]); } 
+                try { finalSignature = await processUploadToCanvas(fileInput.files[0], 'edit-signature-pad'); } 
                 catch (err) { Swal.fire({ icon: 'error', text: 'Gagal membaca file.' }); return false; }
             }
         }
         
-        // Set nilai ke hidden input
         $('#editSignature').val(finalSignature);
 
         var userId = $('#editUserId').val();
@@ -494,7 +508,6 @@ $(document).ready(function() {
         });
     });
 
-    // --- DELETE RECORD LOGIC (Sama seperti sebelumnya) ---
     $('#users_list').on('click', '.delete-record', function () {
         var id = $(this).data('id');
         Swal.fire({ title: 'Hapus User?', text: "Data tidak bisa dikembalikan!", icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya, Hapus!', customClass: { confirmButton: 'btn btn-danger me-3', cancelButton: 'btn btn-secondary' }, buttonsStyling: false }).then((result) => {

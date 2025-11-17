@@ -318,36 +318,33 @@
 														{{ $param['name'] }} 
 														@if($param['type'] == 'url') <span class="badge bg-warning text-dark border ms-1" style="font-size:0.6rem;">URL PARAM</span> @endif
 													</label>
-													<input
-														type="{{ $param['type'] == 'date' ? 'date' : ($param['type'] == 'number' ? 'number' : ($param['type'] == 'password' ? 'password' : (str_contains(strtolower($param['type']), 'file') ? 'file' : 'text'))) }}" 
+
+													@if(str_contains(strtolower($param['type']), 'file'))
+														<input 
+															type="file" 
+															class="form-control console-input mb-1"
+															accept=".jpg,.jpeg,.png"
+															onchange="handleApiFileSelect(this, '{{ $param['name'] }}')"
+															{{ $param['req'] ? 'required' : '' }}
+														>
 														
-														name="{{ $param['name'] }}" 
-														class="form-control console-input"
-														data-param-type="{{ $param['type'] }}"
-														
-														@if(!str_contains(strtolower($param['type']), 'file'))
+														<div class="file-status mb-2"></div>
+
+														<input 
+															type="hidden" 
+															name="{{ $param['name'] }}" 
+															data-param-type="text" 
+														>
+													@else
+														<input
+															type="{{ $param['type'] == 'date' ? 'date' : ($param['type'] == 'number' ? 'number' : ($param['type'] == 'password' ? 'password' : 'text')) }}" 
+															name="{{ $param['name'] }}" 
+															class="form-control console-input"
+															data-param-type="{{ $param['type'] }}"
 															placeholder="Enter {{ $param['name'] }}..."
-														@endif
-														
-														{{ $param['req'] ? 'required' : '' }}
-
-														@if(str_contains(strtolower($param['type']), 'file'))
-															<?php
-																$fileType = $param['type'];
-																$acceptExtensions = null;
-
-																if (preg_match('/\((.*)\)/', $fileType, $matches)) {
-																	$extString = $matches[1];
-																	$acceptExtensions = '.' . str_replace(',', ',.', strtolower($extString));
-																}
-															?>
-															
-															{{-- Terapkan accept attribute hanya jika ekstensi spesifik ditemukan --}}
-															@if ($acceptExtensions !== null)
-																accept="{{ $acceptExtensions }}"
-															@endif
-														@endif
-													>
+															{{ $param['req'] ? 'required' : '' }}
+														>
+													@endif
 												</div>
 											@endforeach
 											
@@ -529,22 +526,19 @@
 			const isAuth = card.data('auth');
 			
 			let bodyData = {};
-			let isMultipart = false;
 			let ajaxMethod = method; 
 
-			$(form).find('input').each(function() {
+			$(form).find('input, select').each(function() {
 				const input = $(this);
 				const name = input.attr('name');
 				const val = input.val();
 				const type = input.data('param-type');
 
-				if(input.attr('type') === 'file') {
-					isMultipart = true;
-				}
+				if(!name) return;
 
 				if(type === 'url') {
 					uri = uri.replace(`{${name}}`, val);
-				} else if (input.attr('type') !== 'file') {
+				} else {
 					if(val) bodyData[name] = val;
 				}
 			});
@@ -555,8 +549,6 @@
 			if(method === 'GET' && Object.keys(bodyData).length > 0) {
 				finalUrl += '?' + $.param(bodyData);
 				bodyData = null; 
-			} else if (method !== 'GET' && !isMultipart) {
-				// Data non-GET, non-file akan tetap di bodyData
 			}
 
 			let headers = { "Accept": "application/json" };
@@ -599,6 +591,7 @@
 				method: ajaxMethod,
 				headers: headers,
 				dataType: 'json',
+				data: (method !== 'GET') ? bodyData : bodyData,
 				success: function(res, textStatus, xhr) {
 					const duration = (performance.now() - startTime).toFixed(0);
 					statusBadge.text(`${xhr.status} ${xhr.statusText}`).attr('class', 'res-status-badge badge bg-success text-white');
@@ -634,17 +627,53 @@
 				}
 			};
 			
-			if (method !== 'GET') {
-				if (isMultipart) {
-					ajaxOptions.data = new FormData(form);
-					ajaxOptions.processData = false; 
-					ajaxOptions.contentType = false;
-				} else {
-					ajaxOptions.data = bodyData;
+			$.ajax(ajaxOptions);
+		}
+		
+		function cleanSignature(canvas) {
+			const ctx = canvas.getContext('2d');
+			const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+			const data = imageData.data;
+
+			for (let i = 0; i < data.length; i += 4) {
+				let brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
+				if (brightness > 180) {
+					data[i] = 255;
+					data[i + 1] = 255;
+					data[i + 2] = 255;
 				}
 			}
+			ctx.putImageData(imageData, 0, 0);
+			return canvas.toDataURL('image/png');
+		}
 
-			$.ajax(ajaxOptions);
+		async function handleApiFileSelect(input, targetName) {
+			if (input.files && input.files[0]) {
+				const file = input.files[0];
+				const reader = new FileReader();
+				
+				const hiddenInput = $(input).siblings(`input[name="${targetName}"]`);
+				const statusDiv = $(input).next('.file-status');
+				const canvas = document.createElement('canvas');
+				
+				reader.onload = function(e) {
+					const img = new Image();
+					img.onload = function() {
+						canvas.width = img.width;
+						canvas.height = img.height;
+						const ctx = canvas.getContext('2d');
+						ctx.drawImage(img, 0, 0);
+						
+						const cleanBase64 = cleanSignature(canvas);
+						
+						hiddenInput.val(cleanBase64);
+						
+						statusDiv.html('<span class="text-success small fw-bold"><i class="ri-check-line"></i> Ready (Base64)</span>');
+					}
+					img.src = e.target.result;
+				}
+				reader.readAsDataURL(file);
+			}
 		}
 	</script>
 </body>

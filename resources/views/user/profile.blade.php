@@ -6,18 +6,15 @@
         <div class="col-12">
             <div class="card mb-6">
                 <div class="user-profile-header-banner">
-                    {{-- Gunakan helper asset() untuk path gambar statis --}}
                     <img src="{{ asset('assets/img/pages/default-banner.png') }}" alt="Banner image" class="rounded-top">
                 </div>
                 <div class="user-profile-header d-flex flex-column flex-sm-row text-sm-start text-center mb-5">
                     <div class="flex-shrink-0 mt-n2 mx-sm-0 mx-auto">
-                        {{-- Path ke gambar profil pengguna dari session (jika diperlukan) --}}
                         <img src="{{ asset('assets/img/profile/' . $user->profile_picture) }}" alt="user image" class="d-block h-auto ms-0 ms-sm-5 rounded-4 user-profile-img" width="120" height="125">
                     </div>
                     <div class="flex-grow-1 mt-4 mt-sm-12">
                         <div class="d-flex align-items-md-end align-items-sm-start align-items-center justify-content-md-between justify-content-start mx-5 flex-md-row flex-column gap-6">
                             <div class="user-profile-info">
-                                {{-- Menampilkan data dari objek $user --}}
                                 <h4 class="mb-2">{{ $user->name }}</h4>
                                 <ul class="list-inline mb-0 d-flex align-items-center flex-wrap justify-content-sm-start justify-content-center gap-4">
                                     <li class="list-inline-item">
@@ -30,7 +27,6 @@
                                     </li>
                                     <li class="list-inline-item">
                                         <i class="ri-calendar-line me-2 ri-24px"></i>
-                                        {{-- Menggunakan Carbon untuk memformat tanggal dengan mudah --}}
                                         <span class="fw-medium">Joined {{ $user->joined->format('F Y') }}</span>
                                     </li>
                                 </ul>
