@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Support\Facades\Validator;
-use App\Models\RecentDevice; // Pastikan model ini di-import
+use App\Models\RecentDevice;
 
 class AccountController extends Controller
 {
@@ -29,13 +29,13 @@ class AccountController extends Controller
         $user = $request->user();
         
         $validator = Validator::make($request->all(), [
-            'fullname'     => ['required', 'string', 'max:255'],
-            'email'        => ['required', 'email', 'max:255', 'unique:users,email,'.$user->id],
-            'phone_number' => ['nullable', 'string', 'max:20'],
-            'address'      => ['nullable', 'string', 'max:255'],
-            'city'         => ['nullable', 'string', 'max:255'],
-            'country'      => ['nullable', 'string', 'max:255'],
-            'signature'    => ['nullable', 'string'],
+            'fullname'     => ['sometimes', 'string', 'max:255'],
+            'email'        => ['sometimes', 'nullable', 'email', 'max:255', 'unique:users,email,'.$user->id],
+            'phone_number' => ['sometimes', 'nullable', 'string', 'max:20'],
+            'address'      => ['sometimes', 'nullable', 'string', 'max:255'],
+            'city'         => ['sometimes', 'nullable', 'string', 'max:255'],
+            'country'      => ['sometimes', 'nullable', 'string', 'max:255'],
+            'signature'    => ['sometimes', 'nullable', 'string'], 
         ]);
 
         if ($validator->fails()) {
@@ -47,20 +47,16 @@ class AccountController extends Controller
 
         $validated = $validator->validated();
 
-        $user->name = $validated['fullname'];
+        if (isset($validated['fullname'])) {
+            $user->name = $validated['fullname'];
+        }
         
-        if ($request->has('signature') && !empty($validated['signature'])) {
+        if (array_key_exists('signature', $validated)) {
             $user->signature = $validated['signature'];
         }
 
-        $user->update([
-            'fullname' => $validated['fullname'],
-            'email' => $validated['email'],
-            'phone_number' => $validated['phone_number'],
-            'address' => $validated['address'],
-            'city' => $validated['city'],
-            'country' => $validated['country'],
-        ]);
+        $user->fill($validated);
+        $user->save();
         
         if ($request->wantsJson()) {
             return response()->json([

@@ -325,7 +325,6 @@
 															class="form-control console-input mb-1"
 															accept=".jpg,.jpeg,.png"
 															onchange="handleApiFileSelect(this, '{{ $param['name'] }}')"
-															{{ $param['req'] ? 'required' : '' }}
 														>
 														
 														<div class="file-status mb-2"></div>
@@ -342,7 +341,6 @@
 															class="form-control console-input"
 															data-param-type="{{ $param['type'] }}"
 															placeholder="Enter {{ $param['name'] }}..."
-															{{ $param['req'] ? 'required' : '' }}
 														>
 													@endif
 												</div>

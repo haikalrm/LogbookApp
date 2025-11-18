@@ -177,7 +177,7 @@ Mengubah data pengguna lain secara lengkap.
 | editState | text | yes | Provinsi |
 | editZipCode | text | yes | Kode Pos |
 | editRadioIcon-01 | number | yes | Access Level (0,1,2) |
-| editTechnician | text | no | Check jika Teknisi (value=1) |
+| editTechnician | number | no | Check jika Teknisi (value=1) |
 | editSignature | text | yes | Tanda Tangan Baru (Base64) |
 
 ## [DELETE] /users/{id}

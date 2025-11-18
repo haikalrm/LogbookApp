@@ -34,7 +34,7 @@ class AuthController extends Controller
             ], 429);
         }
 
-        $loginType = filter_var($request->login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+        $loginType = filter_var($request->login, FILTER_VALIDATE_EMAIL) ? 'email' : 'name';
         $user = User::where($loginType, $request->login)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
