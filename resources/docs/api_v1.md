@@ -34,7 +34,7 @@ Memperbarui data diri dasar pengguna seperti nama, alamat, dan kontak.
 
 ## [GET] /security
 > Cek Riwayat Login (Recent Devices)
-Mendapatkan daftar perangkat yang pernah digunakan untuk login (IP, Browser, OS) dan waktu terakhir update password. Berguna untuk monitoring keamanan akun.
+Mendapatkan daftar perangkat yang pernah digunakan untuk login (IP, Browser, OS). Berguna untuk monitoring keamanan akun.
 
 ## [POST] /change-password
 > Ganti Password
@@ -43,8 +43,8 @@ Mengubah password user saat ini dengan yang baru.
 | Name | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
 | current_password | password | yes | Password saat ini |
-| new_password | password | yes | Password baru (min 8 karakter) |
-| new_password_confirmation | password | yes | Konfirmasi password baru |
+| password | password | yes | Password baru (minimal 8 karakter, wajib mengandung minimal 1 huruf besar, 1 huruf kecil, 1 angka, dan 1 simbol). |
+| password_confirmation | password | yes | Konfirmasi password baru |
 
 # 2. Tools (Peralatan)
 

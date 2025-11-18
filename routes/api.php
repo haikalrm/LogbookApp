@@ -120,6 +120,14 @@ Route::prefix('v1')->group(function () {
         Route::match(['put', 'patch', 'delete'], 'users', function() {
             return response()->json(['success' => false, 'message' => 'User ID wajib diisi: /users/{id}'], 400);
         });
+		
+		Route::any('users/reset-password', function() {
+             return response()->json(['success' => false, 'message' => 'User ID wajib diisi. Format: /users/{id}/reset-password'], 400);
+        });
+
+        Route::any('users//reset-password', function() {
+             return response()->json(['success' => false, 'message' => 'User ID wajib diisi. Format: /users/{id}/reset-password'], 400);
+        });
 
         Route::any('units/logbooks/{any?}', function() {
             return response()->json(['success' => false, 'message' => 'Unit ID wajib diisi. Format: /units/{unit_id}/logbooks'], 400);
