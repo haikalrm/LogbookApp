@@ -32,6 +32,10 @@ Memperbarui data diri dasar pengguna seperti nama, alamat, dan kontak.
 | country | text | no | Negara |
 | signature | text | no | Tanda Tangan (Base64 String) |
 
+## [GET] /security
+> Cek Riwayat Login (Recent Devices)
+Mendapatkan daftar perangkat yang pernah digunakan untuk login (IP, Browser, OS) dan waktu terakhir update password. Berguna untuk monitoring keamanan akun.
+
 ## [POST] /change-password
 > Ganti Password
 Mengubah password user saat ini dengan yang baru.
@@ -183,6 +187,15 @@ Menghapus akun pengguna dari sistem.
 | Name | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
 | id | url | yes | ID User (URL) |
+
+## [POST] /users/{id}/reset-password
+> Force Reset Password (Admin)
+Admin dapat mengubah password user tertentu. Endpoint ini membutuhkan input password baru.
+
+| Name | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| id | url | yes | ID User (URL) |
+| new_password | text | yes | Password baru (Min. 8 Karakter) |
 
 # 6. Logbook System
 

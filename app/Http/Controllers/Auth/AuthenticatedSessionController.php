@@ -4,14 +4,14 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\RecentDevice;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\View\View;
-
-use App\Models\RecentDevice; 
-use Jenssegers\Agent\Agent;  
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Validation\ValidationException;
+use Jenssegers\Agent\Agent;
 use Illuminate\Support\Facades\Log;
 
 class AuthenticatedSessionController extends Controller
@@ -20,61 +20,95 @@ class AuthenticatedSessionController extends Controller
     {
         return view('auth.login');
     }
-	
-	public function store(LoginRequest $request): RedirectResponse
-    {
-        // 1. Proses Login Bawaan Laravel
-        $request->authenticate();
 
+    public function store(LoginRequest $request): RedirectResponse
+    {
+        $throttleKey = 'login_web:' . $request->ip();
+
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            
+            throw ValidationException::withMessages([
+                'login' => trans('auth.throttle', [
+                    'seconds' => $seconds,
+                    'minutes' => ceil($seconds / 60),
+                ]),
+            ]);
+        }
+
+        $loginField = $request->input('login') ?? $request->input('email');
+        $loginType = filter_var($loginField, FILTER_VALIDATE_EMAIL) ? 'email' : 'name';
+
+        $credentials = [
+            $loginType => $loginField,
+            'password' => $request->input('password')
+        ];
+
+        if (!Auth::attempt($credentials, $request->boolean('remember'))) {
+            RateLimiter::hit($throttleKey);
+
+            throw ValidationException::withMessages([
+                'login' => trans('auth.failed'),
+            ]);
+        }
+
+        RateLimiter::clear($throttleKey);
         $request->session()->regenerate();
 
-        // 2. [TAMBAHAN BARU] Logika Simpan Recent Device (Sama persis dengan API)
         try {
-            $user = $request->user();
-            $agent = new Agent(); // Panggil library deteksi
-
-            // Ambil detail
+            $user = Auth::user();
+            $agent = new Agent();
+            
             $ip = $request->ip();
             $userAgent = $request->userAgent();
-            $deviceType = $agent->isDesktop() ? 'Desktop' : ($agent->isPhone() ? 'Phone' : 'Tablet');
-            $platform = $agent->platform() ?: 'Unknown OS';
-            $browser = $agent->browser() ?: 'Unknown Browser';
+            
+            $platform = $agent->platform();
+            $platformVer = $agent->version($platform);
+            $osInfo = $platform ? ($platform . ' ' . $platformVer) : 'Unknown OS';
 
-            // Cek Duplikat
+            $deviceModel = $agent->device(); 
+            $deviceType = $agent->isDesktop() ? 'Desktop' : ($agent->isPhone() ? 'Phone' : 'Tablet');
+            $deviceInfo = $deviceModel ? ($deviceModel . ' (' . $deviceType . ')') : $deviceType;
+
+            $browser = $agent->browser();
+            $browserVer = $agent->version($browser);
+            $browserInfo = $browser ? ($browser . ' ' . $browserVer) : 'Unknown Browser';
+
             $existingDevice = RecentDevice::where('user_id', $user->id)
                 ->where('ip_address', $ip)
                 ->where('user_agent', $userAgent)
                 ->first();
 
             if ($existingDevice) {
-                // Update jam login jika device sama
-                $existingDevice->update(['last_login' => now()]);
+                $existingDevice->update([
+                    'last_login' => now(),
+                    'device_type' => $deviceInfo,
+                    'os' => $osInfo,
+                    'browser' => $browserInfo,
+                ]);
             } else {
-                // Buat baru jika device baru
                 RecentDevice::create([
                     'user_id' => $user->id,
                     'ip_address' => $ip,
                     'user_agent' => $userAgent,
-                    'device_type' => $deviceType,
-                    'os' => $platform,
-                    'browser' => $browser,
-                    'country' => 'Indonesia', // Static dulu (bisa dikembangkan nanti)
+                    'device_type' => $deviceInfo,
+                    'os' => $osInfo,
+                    'browser' => $browserInfo,
+                    'country' => 'Indonesia',
                     'last_login' => now(),
                 ]);
             }
         } catch (\Exception $e) {
-            // Error silent agar user tetap bisa login meski pencatatan device gagal
-            Log::error("Gagal mencatat device di Web Login: " . $e->getMessage());
+            Log::error($e->getMessage());
         }
 
-        // 3. Redirect ke Dashboard
         return redirect()->intended(RouteServiceProvider::HOME);
     }
 
-    public function destroy(Request $request)
+    public function destroy(Request $request): RedirectResponse
     {
-        // Logout dan hapus session
         Auth::guard('web')->logout();
+
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 

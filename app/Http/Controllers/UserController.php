@@ -142,7 +142,6 @@ class UserController extends Controller
                 'password'        => Hash::make('password123'),
                 'access_level'    => $validated['customRadioIcon-01'],
                 'position_id'     => $validated['position'],
-				'profile_picture' => 'default.png',
                 'technician'      => $request->has('technician') ? 1 : 0,
                 'signature'       => $validated['signature'],
                 'country'         => $validated['modalAddressCountry'],
@@ -299,4 +298,56 @@ class UserController extends Controller
             return response()->json(['success' => false, 'message' => 'Gagal menghapus user: ' . $e->getMessage()], 500);
         }
     }
+	
+	public function resetPassword(Request $request, $id)
+	{
+		try {
+			if (auth()->user()->access_level != 2) {
+				if ($request->wantsJson()) {
+					return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+				}
+				return back()->with('errorMessage', 'Akses ditolak.');
+			}
+
+			$validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+				'new_password' => 'required|string|min:8',
+			]);
+
+			if ($validator->fails()) {
+				if ($request->wantsJson()) {
+					return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
+				}
+				return back()->with('errorMessage', $validator->errors()->first());
+			}
+			
+			$user = User::find($id);
+			if (!$user) {
+				if ($request->wantsJson()) {
+					return response()->json(['success' => false, 'message' => 'User tidak ditemukan'], 404);
+				}
+				return back()->with('errorMessage', 'User tidak ditemukan.');
+			}
+
+			$user->password = Hash::make($request->new_password);
+			$user->save();
+
+			$message = 'Password user ' . $user->name . ' berhasil diubah.';
+
+			if ($request->wantsJson()) {
+				return response()->json([
+					'success' => true,
+					'message' => $message
+				]);
+			}
+
+			return back()->with('successMessage', $message);
+
+		} catch (\Exception $e) {
+			Log::error('Reset Password Error: ' . $e->getMessage());
+			if ($request->wantsJson()) {
+				return response()->json(['success' => false, 'message' => 'Gagal reset password: ' . $e->getMessage()], 500);
+			}
+			return back()->with('errorMessage', 'Gagal mereset password.');
+		}
+	}
 }

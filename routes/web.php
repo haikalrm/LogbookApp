@@ -105,7 +105,6 @@ Route::middleware(['auth', 'throttle:100,1'])->group(function () {
     Route::controller(AccountController::class)->prefix('account')->name('account.')->group(function () {
         Route::get('/settings', 'settings')->name('settings');
         Route::get('/security', 'security')->name('security');
-        Route::get('/notifications', 'notifications')->name('notifications');
         Route::patch('/settings/details', 'updateDetails')->name('update.details');
         Route::put('/security/password', 'updatePassword')->name('update.password');
     });
@@ -158,6 +157,7 @@ Route::middleware(['auth', 'throttle:100,1'])->group(function () {
             Route::get('/users/{user}', 'show')->name('show');
             Route::get('/users/{user}/edit', 'edit')->name('edit');
             Route::put('/users/{user}', 'update')->name('update');
+            Route::post('/users/{id}/reset-password', 'resetPassword')->name('resetPassword');
             Route::delete('/users/{user}', 'destroy')->name('destroy');
         });
         

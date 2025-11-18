@@ -4,6 +4,8 @@ namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Http\Request;
 
 class Handler extends ExceptionHandler
 {
@@ -24,7 +26,16 @@ class Handler extends ExceptionHandler
     public function register(): void
     {
         $this->reportable(function (Throwable $e) {
-            //
+
+        });
+
+        $this->renderable(function (AuthenticationException $e, Request $request) {
+            if ($request->is('api/*') || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthenticated. Token Invalid or Expired.'
+                ], 401);
+            }
         });
     }
 }

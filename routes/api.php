@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\AccountController;
 use App\Http\Controllers\LogbookController;
 use App\Http\Controllers\LogbookItemController;
 use App\Http\Controllers\UserController;
@@ -19,9 +20,13 @@ Route::prefix('v1')->group(function () {
     Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
         
         Route::post('/logout', [AuthController::class, 'logout']);
-        Route::get('/profile', [AuthController::class, 'profile']);
-        Route::put('/profile', [AuthController::class, 'updateProfile']);
-        Route::post('/change-password', [AuthController::class, 'changePassword']);
+
+        Route::controller(AccountController::class)->group(function () {
+            Route::get('/profile', 'settings');
+            Route::put('/profile', 'updateDetails');
+            Route::get('/security', 'security');
+            Route::post('/change-password', 'updatePassword');
+        });
 
         Route::get('/logbooks-statistics', [LogbookController::class, 'statistics']);
         
@@ -46,7 +51,8 @@ Route::prefix('v1')->group(function () {
         Route::get('/users', [UserController::class, 'index']);
         Route::post('/users', [UserController::class, 'store']); 
         Route::get('/users/{id}', [UserController::class, 'edit']); 
-        Route::put('/users/{id}', [UserController::class, 'update']); 
+        Route::put('/users/{id}', [UserController::class, 'update']);
+        Route::post('/users/{id}/reset-password', [UserController::class, 'resetPassword']);
         Route::delete('/users/{id}', [UserController::class, 'destroy']); 
         
         Route::get('/technicians', [UserController::class, 'technicians']);
