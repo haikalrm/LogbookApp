@@ -12,13 +12,12 @@ use Illuminate\Support\Facades\Validator;
 
 class LogbookItemController extends Controller
 {
-    private function checkPermission($user, $logbook, $targetUserId)
+    private function checkPermission($user, $logbook)
     {
         $isAdmin = $user->access_level == 2;
         $isLogbookCreator = $logbook && $logbook->created_by == $user->id;
-        $isSelf = $targetUserId == $user->id;
 
-        return $isAdmin || $isLogbookCreator || $isSelf;
+        return $isAdmin || $isLogbookCreator;
     }
 
     public function index(Request $request, $unit_id, $logbook_id)
@@ -82,7 +81,7 @@ class LogbookItemController extends Controller
                 return back()->with('errorMessage', $validator->errors()->first())->withInput();
             }
 
-            if (!$this->checkPermission($request->user(), $logbook, $request->teknisi)) {
+            if (!$this->checkPermission($request->user(), $logbook)) {
                 if ($request->wantsJson()) {
                     return response()->json(['success' => false, 'message' => 'Unauthorized. Anda tidak memiliki izin menambahkan item ini.'], 403);
                 }
@@ -141,7 +140,7 @@ class LogbookItemController extends Controller
             
             $logbook = Logbook::find($logbook_id);
 
-            if (!$this->checkPermission($request->user(), $logbook, $logbookItem->teknisi)) {
+            if (!$this->checkPermission($request->user(), $logbook)) {
                 if ($request->wantsJson()) {
                     return response()->json(['success' => false, 'message' => 'Unauthorized. Anda tidak memiliki izin mengedit item ini.'], 403);
                 }
@@ -201,13 +200,12 @@ class LogbookItemController extends Controller
 
             $logbook = Logbook::find($logbook_id);
 
-            if (!$this->checkPermission($request->user(), $logbook, $logbookItem->teknisi)) {
+            if (!$this->checkPermission($request->user(), $logbook)) {
                 return response()->json([
                     'success' => false, 
                     'message' => 'Unauthorized. Anda tidak memiliki izin menghapus item ini.'
                 ], 403);
             }
-            // ---------------------
 
             $logbookItem->delete();
             Cache::forget('logbook_items_' . $logbook_id);
